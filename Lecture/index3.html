@@ -1,0 +1,59 @@
+<html>
+    <head> 
+        <title> Form elements </title> 
+    </head> 
+    <body> 
+        <form action="actionpage.php" method="post"> 
+            Regular input text fields<br/><br/> 
+            First name: <input type="text" name="firstName1" value="Kirill"><br/> 
+            Last name:  <input type="text" name="lastName1" value="Khanov"><br/> 
+            <br/><br/>
+
+            Input text field with max length<br/> 
+            JMBG: <input type="text" name="jmbg1" maxlength="13" size="20"> 
+            <br/><br/> 
+
+            Password text field <br/> 
+            Username:<br/> 
+            <input type="text" name="username" size="20"><br/> 
+            Password:<br/> 
+            <input type="password" name="pwd" size="20"><br/> 
+            <input type="submit" name="submit" value="Submit"> 
+            <input type="reset" name="reset" value="Reset"> 
+            <br/><br/> 
+
+            File upload<br/> 
+            <input type="file" name="fileupl" id="fileupl1"> 
+            <br/><br/> 
+
+            Hidden element<br/> 
+            <input type="hidden" name="hidden1" value="This is hidden element"> 
+            <br/><br/> 
+            
+            <label>Text area and label</label><br/> 
+            <textarea rows="4" cols="50">Welcome to the Singidunum University, where you will learn web programming, html, css, javascript and a lot more. 
+            </textarea> 
+            <br/><br/> 
+
+            Radio buttons <br/><br/> 
+            <label>Select your gender</label><br/> 
+            <input type="radio" name="genderradio">Male<br/> 
+            <input type="radio" name="genderradio">Female<br/> 
+            <br/> 
+         
+            Checkbox <br/><br/> 
+            <label>What vehicle do you have?</label><br/> 
+            <input type="checkbox" name="vehicle1" value="bike">I have a bike<br/> 
+            <input type="checkbox" name="vehicle2" value="car" checked>I have a car<br/> 
+            <input type="submit" value="Submit"><br/> 
+
+            Dropdown list<br/> 
+            <select name="dropdownlist1"> 
+            <option value="red">red</option> 
+            <option value="blue">blue</option> 
+            <option value="green">green</option> 
+            </select> 
+            <br/> 
+        </form> 
+    </body> 
+</html>
