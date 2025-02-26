@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<head>
+    <title> Styling the table </title>
+    <style>
+        #faculties {
+            font-family: "Trebushet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        #faculties th, #faculties td{
+            border: 1px solid #ddd;
+            padding: 5px;
+        }
+
+        /* 2 colors one after another */
+        /* #faculties tr:nth-child(odd){background-color: #abcdef;}
+        #faculties tr:nth-child(even){background-color: #fedcba;} */
+
+
+        /* 3 colors one after another, counts header as 1st */
+        #faculties tr:nth-child(3n+1) {
+        background-color: lightblue; /* First color */
+        }
+        #faculties tr:nth-child(3n+2) {
+        background-color: #fedcba; /* Second color */
+        }
+        #faculties tr:nth-child(3n+3) {
+        background-color: lightcoral; /* Third color */
+        }
+
+        #faculties th { 
+            padding-top: 12px; 
+            padding-bottom: 12px; 
+            text-align: left; 
+            background-color: #fe001a; 
+            color: white; 
+
+        } 
+    </style>
+</head>
+<body>
+    <table id="faculties"> 
+        <tr> 
+            <th>Name</th> 
+            <th>City</th> 
+            <th>University</th> 
+        </tr> 
+        <tr> 
+            <td>Technical Faculty</td> 
+            <td>Belgrade</td> 
+            <td>Singidunum</td> 
+        </tr> 
+        <tr> 
+            <td>Faculty of Informatics and Computing</td> 
+            <td>Belgrade</td> 
+            <td>Singidunum</td> 
+        </tr> 
+        <tr> 
+            <td>Technical Faculty</td> 
+            <td>Nis</td> 
+            <td>Singidunum</td> 
+        </tr> 
+        <tr> 
+            <td>Technical Faculty</td> 
+            <td>Novi Sad</td> 
+            <td>Singidunum</td> 
+        </tr> 
+        <tr> 
+            <td>Informatics</td> 
+            <td>Nis</td> 
+            <td>Singidunum</td> 
+        </tr> 
+       </table> 
+      
+</body>
+</html>

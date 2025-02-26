@@ -1,0 +1,73 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+    <title>Positioning of elements with CSS</title> 
+    <style> 
+        #wrapper { 
+            border: 1px solid #000; 
+            margin: 40px; 
+            padding: 30px; 
+        } 
+        #div-before, #div-after { 
+            background-color: #88d; 
+            color: #000; 
+        } 
+        #div-1 { 
+            width: 400px; 
+            background-color: #000; 
+            color: #fff; 
+        } 
+        #div-1-padding { 
+            padding: 10px; 
+        } 
+        #div-1a { 
+            background-color: #d33; 
+            color: #fff; 
+            float: left; 
+            width: 190px; 
+        } 
+        #div-1b { 
+            background-color: #3d3; 
+            color: #fff; 
+            float: left; 
+            width: 190px; 
+        } 
+        #div-1c { 
+            background-color: #33d; 
+            color: #fff; 
+            clear:both; 
+        } 
+        #example div p { 
+            margin:0 .25em; 
+            padding: .25em 0; 
+        } 
+   
+    </style> 
+</head> 
+<body> 
+    <div id="wrapper"> 
+        <div id="example"> 
+            <div id="div-1"> 
+                <div id="div-before"> 
+                    <p>id="div-before"</p> 
+                </div> 
+                <div id="div-1-padding"> 
+                    <p>id=div-1</p> 
+                </div> 
+                <div id="div-1a"> 
+                    <p>This is the text inside div id=div-1a</p> 
+                </div> 
+                <div id="div-1b"> 
+                    <p>id=div-1b</p> 
+                </div> 
+                <div id="div-1c"> 
+                    <p>id=div-1c</p> 
+                </div> 
+                <div id="div-after"> 
+                    <p>id=div-after</p> 
+                </div> 
+            </div> 
+        </div> 
+    </div> 
+</body> 
+</html>
