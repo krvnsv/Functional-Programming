@@ -1,0 +1,177 @@
+<html>
+<script>
+
+/*
+function f(x){
+    return x+1;
+}
+
+let g = (x) =>{
+    return x*2
+}
+
+let x = 10;
+
+console.log(f(g(x)))
+console.log(g(f(x)))
+
+// Composed function f(g(x))
+
+function Compose(f,g){
+    return (x) =>{
+        return f(g(x))
+    }
+}
+
+let newF1 = Compose(f, g);
+// newF(x) =>{
+//    retrunf(g(x))
+// }
+let newF2 = Compose(g, f);
+
+
+console.log(newF1(x))
+console.log(newF2(x))
+*/ 
+
+/*
+function compose(...fs){
+    let com = fs[0]
+    for(let i = 1; i < fs.length; i++){
+        console.log(com)
+        com = (x) =>{fs[i](fs[i](com(x)))}
+    }
+    return com
+}   
+
+let c = compose(
+        (x)=>{console.log(x+2)},
+        (x)=>{console.log(x*2)},
+        (x)=>{console.log(x+1)}
+)
+
+console.log(c)
+*/
+
+/*
+function f1(x){
+    return function f2(x){
+        return function f3(x){
+            return x;
+        }
+    }
+}
+
+let fc = f1(10);
+x = 10
+console.log(fc(x))
+*/ 
+
+/*
+let arr = [1,2,3,4,5,6,7,8,9,10]
+let dub = (x)=> {
+    return x*2
+}
+
+let arcc = []
+for(let i = 0; i<arr.length; i++){
+    arcc.push(dub(arr[i]))
+}
+
+console.log(arr)
+console.log(arcc)
+*/
+
+/*
+function MyMap(arr, f){
+    let arcc = []
+    for(let i = 0; i<arr.length; i++){
+        arcc.push(f(arr[i]))
+    }
+    return arcc
+}
+
+let arr = [1,2,3,4,5,6,7,8,9,10]
+
+let triple_arr = MyMap(arr, (x)=>{return x*3})
+
+console.log(arr)
+console.log(triple_arr)
+
+let triple_arr_2 = arr.map((x)=>{return x*3})
+
+console.log(arr)
+console.log(triple_arr)
+console.log(triple_arr_2)
+*/
+
+/*
+has_vowels = false
+vowels = ['A', 'E', 'I', 'O', 'U']
+function CheckForVowels(s){
+    s = s.toUpperCase()
+    for(let i=0; i<s.length; i++){
+        for(let j=0; j<vowels.length; j++){
+            if(vowels[j] === s[i]){
+                has_vowels = true;
+                console.log(vowels[j])
+                break;
+            }
+        }
+    }
+    console.log(s)
+    return has_vowels
+}
+
+console.log(CheckForVowels(
+    "Th qck brwn fx jmpd"
+))
+console.log(CheckForVowels(
+    "The quick brown fox jumped"
+))
+*/
+
+/*
+function add(x, y){
+    if(y == undefined){
+        return ++x
+    }
+    return x + y
+}
+
+console.log(add(3))
+*/ 
+
+// function add(x, y=1){
+//     return x+y
+// }
+
+// console.log(add(3))
+
+/*
+function CalculateAverage(...args){
+    let sum = 0
+    for(let i=0; i < args.length; i++){
+        sum = sum + args[i]
+    }
+    return sum/args.length
+}
+
+console.log(CalculateAverage(3, 5))
+*/
+
+/*
+function ComputeGrade(points){
+    return points > 50 ? Math.ceil(points/10) : 'NP';
+}
+
+console.log(ComputeGrade(89))
+*/ 
+
+do{   
+    let pts = prompt("Enter points: ")
+}while(pts != null)
+
+
+</script>
+</html>
