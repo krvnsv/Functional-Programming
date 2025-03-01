@@ -1,5 +1,98 @@
 <html>
 <script>
+/*
+let arr = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+let arr2 = arr.map((x)=> x*2)
+console.log(arr2)
+
+let arr4 = arr.filter((x)=> x%2 != 0)
+console.log(arr4)
+
+let arr5 = arr.filter((x)=> false)
+console.log(arr5)
+
+let arr6 = arr.filter((x)=> true)
+console.log(arr6)
+
+let cond = (x) =>{
+    return x>10
+}
+
+console.log(cond(5))
+console.log(cond(10))
+console.log(cond(15))
+
+let arr8 = arr.filter(cond)
+console.log(arr8)
+
+// Reduce
+
+let arr10 = [1,2,3,4,5,6,7,8,9,10]
+let sum = arr10.reduce((acc, x) => acc + x)
+console.log(sum)
+
+
+
+const compose = (...functions) => (input) => 
+functions.reduceRight(
+    (acc, fn) => fn(acc), input
+)
+let dub = (x) => x*2
+let inc = (x) => x+1
+let div2 = (x) => x/2
+
+let cfunc = compose(dub, inc, div2)
+
+console.log(cfunc)
+
+console.log(cfunc(10))
+*/
+// Remove all vowels from the sentence
+/*
+let s = 'The Quick brown fox jumped over the lazy dog'
+s = s.toLocaleLowerCase()
+s = s.split('')
+console.log(s)
+
+//using reduce count the number of letters in the new sentence
+let v = ['a', 'e', 'i', 'o', 'u']
+
+let s2 = s.filter((x)=> !v.includes(x))
+console.log(s2)
+*/
+
+
+function isPerfect(n){
+    arr = []
+    for(let i=1; i<= Math.ceil(n/2); i++){
+        if(n % i== 0){
+            arr.push(i)
+        }
+    }
+    let sum = 0
+    for(let i = 0; i < arr.length; i++){
+        sum = sum + arr[i]
+    }
+    return sum == n;
+}
+
+
+//Find all perfect nums in range 1 tp 100
+
+for(let i=1; i<= 10000; i++){
+    if(isPerfect(i)){
+        console.log(i)
+    }
+}
+
+// rework the above example with : map, filter, reduce
+
+function isPerfect2(n){
+    arr = Array.from(Array(Math.ceil(n/2)+1).keys)
+    arr2= arr.filter((x) => n%x == 0)
+    console.log(arr2)
+}
+isPerfect2(10)
 
 
 
