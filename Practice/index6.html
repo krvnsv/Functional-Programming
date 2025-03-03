@@ -1,0 +1,238 @@
+<html>
+<script>
+/*
+class Maybe{
+    constructor(value){
+        this.value = value;
+    }
+    //Important
+
+    static of(value){
+        return new Maybe(value)
+    }
+    //Important
+
+    map(fn){
+        if(this.value == null){
+            return Maybe.of(null)
+        }
+        return Maybe.of(fn(this.value))
+    }
+
+    // Filter
+    // filter(fn){
+    //     if(this.value == null){
+    //         return
+    //     }
+    // }
+
+    // Reduce
+    // reduce(fn, initialValue){
+    //     if(this.value == null){
+    //         return Maybe.of(null)
+    //     }
+    //     let result = initialValue !== undefined ? initialValue : this[0]
+    //     for (let i =0; i<)
+    // }
+
+
+    //Important
+    getOrElse(defaultValue){
+        return this.value == null ? 
+        defaultValue:this.value
+    }
+}
+
+const user1 ={
+    name: "Alice",
+    address:{
+        town: "Belgrade",
+        street: "Danijelova"
+    }
+}
+
+const user2 ={
+    name: "Bob"
+}
+
+const getStreetName = (user) =>
+{
+    return Maybe.of(user)
+    .map((u) => u.address)
+    .map((address) => address.street)
+    .getOrElse("Street not foumd for user")
+}
+
+console.log(getStreetName(user1))
+console.log(getStreetName(user2))
+*/
+
+let recipe1 ={
+    name: "lasagna",
+    ingredients:[
+        {
+            ingredientName: "Meat",
+            quantity: "500g"
+        },
+        {
+            ingredientName: "Pastery",
+            quantity: "1  pack"
+        }
+    ],
+    preparationInstructions: "Fry the meat..."
+}
+/*
+Copy by reference
+
+let recipe2= recipe1
+
+console.log(recipe1)
+recipe1.preparationInstructions = "Not needed"
+console.log(recipe1)
+console.log(recipe2)
+*/
+
+/*
+Shallow copy
+
+let recipe2 = Object.assign(recipe1)
+
+console.log(recipe1)
+recipe1.preparationInstructions = "Not needed"
+console.log(recipe1)
+console.log(recipe2)
+*/
+
+/*
+Deep copy
+
+let recipe2 = JSON.parse(JSON.stringify(recipe1))
+console.log(recipe1)
+recipe1.preparationInstructions = "Not needed"
+console.log(recipe1)
+console.log(recipe2)
+*/
+
+/*
+let computer ={
+
+};
+
+Object.defineProperty(computer, 'Price',{
+    value: 100000,
+    writable: true,
+    enumerable: true,
+    configurable: true
+})
+
+console.log(computer)
+
+Object.defineProperty(computer, "Manufacturer",{
+    value: "Lenovo",
+    writable: false,
+    enumerable: true,
+    configurable: false
+})
+
+console.log(computer)
+computer.Manufacturer = "Asus"
+console.log(computer)
+*/
+
+/*
+var Ruza = {
+    fullName: "Ruza Ruzic",
+    weigth: 57,
+    height: 170,
+
+    get weigthGrams(){
+        return this.weight*1000
+    },
+
+    get heaightInches(){
+        return this.height/2.54
+    },
+
+    set addSurname(newSurname){
+        this.fullName += " " + newSurname
+    }
+}
+
+console.log(Ruza.weigthGrams)
+console.log(Ruza.heaightInches)
+
+Ruza.addSurname = "Johnson"
+console.log(Ruza.fullName)
+*/
+
+// var Client, Manager, Accountant={
+//     loged_in: false,
+
+//     set login(loged_in){
+//         this.loged_in = true
+//     },
+
+//     set logout(loged_in){
+//         this.loged_in = false
+//     },
+// }
+
+
+// let client = {
+//     login(){
+//         console.log("Logged in")
+//     },
+//     logout(){
+//         console.log("Logged out")
+//     },
+//     purchase(){
+//         console.log("Logged in")
+//     }
+// }
+
+/*
+let person = {
+    login(){
+        console.log("Logged in")
+    },
+    logout(){
+        console.log("Logged out")
+    },
+}
+
+let client = Object.create(person)
+client.purchase = function(){
+    console.log("Purchase made")
+}
+
+let manager = Object.create(person)
+client.purchase = function(){
+    console.log("Printing report ")
+}
+
+let accountant = Object.create(person)
+client.purchase = function(){
+    console.log("Calculating salaries")
+}
+*/
+
+let vehicle = {
+    drive(){
+        console.log("Wroom wroom")    
+    }
+}
+
+let toyota = Object.create(vehicle)
+toyota.brand = "Toyota"
+toyota.countryOfOrigin = "Japan"
+
+let corolla = Object.create(toyota)
+toyota.shape = "elognated"
+
+console.log(toyota.hasOwnProperty("brand"))
+console.log(toyota.hasOwnProperty("shape"))
+
+toyota.drive()
+corolla.drive()
+</script>
+</html>
