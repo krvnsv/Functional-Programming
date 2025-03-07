@@ -1,0 +1,127 @@
+<html>
+    <canvas
+        id="gameCanvas"
+        width="600"
+        height="400"
+        style="border: 1px solid black;"
+    >
+    </canvas>
+    <script>
+        class Entity{
+            constructor(id, components, name){
+                this.id = id
+                this.components = components
+                this.name = name
+            }
+        }
+            
+        class Component {
+            constructor(id, value, name) {
+                this.id = id
+                this.value = value
+                this.name = name
+            }
+        }
+
+        GameWorld = []
+
+        const canvas =
+        document.getElementById("gameCanvas")
+        const ctx = canvas.getContext('2d')
+
+        ctx.clearRect(0,0,canvas.width, canvas.height)
+        
+        var x = 0
+        let y = 150
+
+        
+        ctx.clearRect(0,0,canvas.width, canvas.height)
+        ctx.fillStyle = 'Red'
+        ctx.fillRect(x,y,50,50)
+
+        //Collision???
+
+        //repacking event listent as a component
+        window.addEventListener("keydown",
+            (e)=>{
+                ctx.clearRect(0,0,canvas.width, canvas.height)
+                ctx.fillStyle = 'Red'
+                if(e.code == 'ArrowRight'){
+                    if(x<550){
+                        x = x+10
+                    }
+                }
+                if(e.code == 'ArrowLeft'){
+                    if(x>0){
+                        x=x-10
+                    }
+                }
+                if(e.code == 'ArrowDown'){
+                    if(y<350){
+                        y=y+10
+                    }
+                }
+                if(e.code == 'ArrowUp'){
+                    if(y>0){
+                        y=y-10
+                    }
+                }
+                if(e.code == 'Space'){
+                    if(ctx.fillStyle == 'Red'){
+                        ctx.fillStyle = 'Green'
+                    }
+                    else if(ctx.fillStyle == 'Green'){
+                        ctx.fillStyle = 'Red'
+                    }
+                }
+                ctx.fillRect(x,y,50,50)
+            }
+        )
+
+        
+    
+        /*
+        function system(Entities){
+            //... Entitties - Entities.map(System);
+            return Entities
+        }
+        */
+
+        // Game loop
+        /*
+        Entities.map(systems)
+        Systems = [system1, system2, system3]
+        systems = compose(Systems)
+        */
+
+        // Game loop
+        // Initialization
+
+        // Setup components
+
+        // Asociate components with entities
+
+        // Game World = [my entitites]
+
+        // Loop
+        // while(Running){
+
+            // Get User Input????? Monad
+            
+            // Game Logic
+            
+            // Clear Buffers
+
+            // Rendering
+
+            // Timing Delta Time
+            // GetsCurrentTime
+            // Checks a historical value
+            //Compares if x has passed for defined FPS
+
+        // }
+
+        // Termination
+
+    </script>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Dinosaur Game (Functional ECS with Input)</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #f7f7f7;
+    }
+    canvas {
+      display: block;
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <script>
+    // --- Maybe Monad ---
+    const Maybe = value => ({
+      isJust: value !== null && value !== undefined,
+      map: f => (value != null ? Maybe(f(value)) : Maybe(null)),
+      chain: f => (value != null ? f(value) : Maybe(null)),
+      getOrElse: def => (value != null ? value : def)
+    });
+
+    // --- CanvasMonad ---
+    const CanvasMonad = canvas => ({
+      isJust: canvas !== null && canvas !== undefined,
+      map: f => (canvas != null ? CanvasMonad(f(canvas)) : CanvasMonad(null)),
+      chain: f => (canvas != null ? f(canvas) : CanvasMonad(null)),
+      getOrElse: def => (canvas != null ? canvas : def),
+      getContext: type => (canvas != null ? canvas.getContext(type) : null)
+    });
+
+    // --- InputMonad ---
+    const InputMonad = target => ({
+      subscribe: (eventType, handler) => {
+        target.addEventListener(eventType, handler);
+        return InputMonad(target);
+      },
+      map: f => InputMonad(f(target)),
+      get: () => target
+    });
+
+    // --- Entity Creation Helper ---
+    const createEntity = components => ({ ...components });
+
+    // --- Systems ---
+    // Input System: applies a jump impulse to the player and resets the jump flag.
+    const inputSystem = (entities, inputMaybe) =>
+      entities.map(entity => {
+        if (entity.type === "player" && entity.velocity) {
+          const input = inputMaybe.getOrElse({ jump: false });
+          if (input.jump) {
+            rawInput.jump = false; // reset jump flag
+            return {
+              ...entity,
+              velocity: { ...entity.velocity, y: -10 }
+            };
+          }
+        }
+        return entity;
+      });
+
+    // Gravity System: adds gravity to the player's vertical velocity.
+    const gravitySystem = entities =>
+      entities.map(entity => {
+        if (entity.type === "player" && entity.velocity) {
+          return {
+            ...entity,
+            velocity: { ...entity.velocity, y: entity.velocity.y + 0.5 }
+          };
+        }
+        return entity;
+      });
+
+    // Physics System: updates positions based on velocity.
+    const physicsSystem = entities =>
+      entities.map(entity => {
+        if (entity.position && entity.velocity) {
+          return {
+            ...entity,
+            position: {
+              x: entity.position.x + entity.velocity.x,
+              y: entity.position.y + entity.velocity.y
+            }
+          };
+        }
+        return entity;
+      });
+
+    // Ground System: stops the player from falling below y = 200.
+    // Only clamps when the player is falling (velocity.y >= 0).
+    const groundSystem = entities =>
+      entities.map(entity => {
+        if (entity.type === "player" && entity.position && entity.velocity) {
+          if (entity.position.y >= 200 && entity.velocity.y >= 0) {
+            return {
+              ...entity,
+              position: { ...entity.position, y: 200 },
+              velocity: { ...entity.velocity, y: 0 }
+            };
+          }
+        }
+        return entity;
+      });
+
+    // Obstacle System: respawns the obstacle when it leaves the screen on the left.
+    const obstacleSystem = entities =>
+      entities.map(entity => {
+        if (entity.type === "obstacle" && entity.position) {
+          if (entity.position.x + 30 < 0) {
+            return {
+              ...entity,
+              position: { ...entity.position, x: 600 }
+            };
+          }
+        }
+        return entity;
+      });
+
+    // Render System: draws entities onto the canvas.
+    const renderSystem = (entities, canvasMonad) => {
+    canvasMonad.chain(canvas => {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        entities.map(entity => {
+        if (entity.position && entity.sprite) {
+            ctx.fillStyle = entity.type === "player" ? "green" : "red";
+            ctx.fillRect(entity.position.x, entity.position.y, 30, 30);
+        }
+        return entity;
+        });
+        return CanvasMonad(canvas);
+    });
+    return entities;
+    };
+
+
+    // --- Composition Helper ---
+    const composeSystems = systems =>
+      systems.reduceRight(
+        (acc, system) => state => system(acc(state)),
+        state => state
+      );
+
+    // --- Initial Game State ---
+    let entities = [
+      createEntity({
+        id: "player",
+        type: "player",
+        position: { x: 50, y: 200 },
+        velocity: { x: 0, y: 0 },
+        sprite: "dino"
+      }),
+      createEntity({
+        id: "obstacle",
+        type: "obstacle",
+        position: { x: 400, y: 200 },
+        velocity: { x: -5, y: 0 },
+        sprite: "cactus"
+      })
+    ];
+
+    // --- Encapsulate Input and Canvas ---
+    let rawInput = { jump: false };
+    let inputMaybe = Maybe(rawInput);
+    const canvasEl = document.getElementById("gameCanvas");
+    let canvasMonad = CanvasMonad(canvasEl);
+
+    // --- Wrap User Input Event Subscriptions in an InputMonad ---
+    InputMonad(document)
+      .subscribe("keydown", e => {
+        if (e.key === " ") rawInput.jump = true;
+      })
+      .subscribe("keyup", e => {
+        if (e.key === " ") rawInput.jump = false;
+      });
+
+    // --- Main Game Loop ---
+    // System composition order: input → gravity → physics → ground → obstacle → render.
+    const gameUpdate = composeSystems([
+      state => inputSystem(state, inputMaybe),
+      gravitySystem,
+      physicsSystem,
+      groundSystem,
+      obstacleSystem,
+      state => renderSystem(state, canvasMonad)
+    ]);
+
+    function gameLoop() {
+      entities = gameUpdate(entities);
+      requestAnimationFrame(gameLoop);
+    }
+    
+    gameLoop();
+  </script>
+</body>
+</html>
