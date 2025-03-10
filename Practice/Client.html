@@ -1,0 +1,43 @@
+<html>
+
+
+<body>
+    <h1> Rock Paper Scissors Game</h1>
+    <button id="rock">Rock</button>
+    <button id="paper">Paper</button>
+    <button id="scissors">Scissors</button>
+    <p id="results"></p>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+
+    <script>
+        const socket = io('http://localhost:3000')
+
+        let selection = { choice: null };
+
+        document.getElementById('rock').onclick = () => {
+            selection.choice = 'rock';
+            console.log("Player has selected: Rock");
+            socket.emit("playerMove", selection.choice);
+        }
+
+        document.getElementById('paper').onclick = () => {
+            selection.choice = 'paper';
+            console.log("Player has selected: Paper");
+            socket.emit("playerMove", selection.choice);
+        }
+        
+        document.getElementById('scissors').onclick = () => {
+            selection.choice = 'scissors';
+            console.log("Player has selected: Scissors");
+            socket.emit("playerMove", selection.choice);
+        }
+
+        socket.on("gameResult", (result) =>{
+            document.getElementById('result').innerHTML = result;
+        })
+
+    </script>
+
+</body>
+</html>
