@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Snake Game (No Input Lag + No Reversal)</title>
+  <title>Snake Game</title>
   <style>
     body, html {
       margin: 0;
@@ -43,12 +43,46 @@
     const renderSystem = (entities, canvas) => {
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       entities.forEach(entity => {
         if (entity.type === "snake") {
+          // Draw the snake body with a darker green border
           ctx.fillStyle = "lime";
+          ctx.strokeStyle = "darkgreen";
+          ctx.lineWidth = 2;
+
           entity.body.forEach(segment => {
-            ctx.fillRect(segment.x * 20, segment.y * 20, 20, 20);
+            ctx.fillRect(segment.x * 20, segment.y * 20, 20, 20); // Fill the segment
+            ctx.strokeRect(segment.x * 20, segment.y * 20, 20, 20); // Draw the border
           });
+
+          // Draw the snake's eyes on the head
+          const head = entity.body[0];
+          const eyeRadius = 3; // Radius of the eyes
+          const eyeOffsetX = 5; // Horizontal offset from the center of the head
+          const eyeOffsetY = 5; // Vertical offset from the center of the head
+
+          ctx.fillStyle = "black"; // Eye color
+
+          // Left eye
+          ctx.beginPath();
+          ctx.arc(
+            head.x * 20 + eyeOffsetX, // X position
+            head.y * 20 + eyeOffsetY, // Y position
+            eyeRadius, // Radius
+            0, Math.PI * 2 // Full circle
+          );
+          ctx.fill();
+
+          // Right eye
+          ctx.beginPath();
+          ctx.arc(
+            head.x * 20 + (20 - eyeOffsetX), // X position
+            head.y * 20 + eyeOffsetY, // Y position
+            eyeRadius, // Radius
+            0, Math.PI * 2 // Full circle
+          );
+          ctx.fill();
         }
       });
     };
@@ -75,10 +109,10 @@
 
       // Calculate the new direction based on the key pressed
       let newDirection = null;
-      if ((key === "ArrowUp"|| key === "w") && currentDirection.y === 0) newDirection = { x: 0, y: -1 };
-      if ((key === "ArrowDown"|| key === "s") && currentDirection.y === 0) newDirection = { x: 0, y: 1 };
-      if ((key === "ArrowLeft"|| key === "a") && currentDirection.x === 0) newDirection = { x: -1, y: 0 };
-      if ((key === "ArrowRight"|| key === "d") && currentDirection.x === 0) newDirection = { x: 1, y: 0 };
+      if ((key === "ArrowUp" || key === "w") && currentDirection.y === 0) newDirection = { x: 0, y: -1 };
+      if ((key === "ArrowDown" || key === "s") && currentDirection.y === 0) newDirection = { x: 0, y: 1 };
+      if ((key === "ArrowLeft" || key === "a") && currentDirection.x === 0) newDirection = { x: -1, y: 0 };
+      if ((key === "ArrowRight" || key === "d") && currentDirection.x === 0) newDirection = { x: 1, y: 0 };
 
       // Buffer the new direction if it's valid and doesn't reverse the current direction
       if (newDirection) {
