@@ -65,35 +65,36 @@
 
     const canvasEl = document.getElementById("gameCanvas");
 
-    // Direction buffer to store the next direction change
-    let directionBuffer = null;
+    // Track the last time a direction change was made
+    let lastDirectionChangeTime = 0;
+    const directionChangeCooldown = 500; // 0.5 seconds cooldown
 
-    // Handle input immediately but buffer the direction change
+    // Handle input with a cooldown to prevent rapid direction changes
     document.addEventListener("keydown", e => {
       const key = e.key;
       const currentDirection = entities[0].direction;
+      const now = Date.now();
 
-      // Calculate the new direction based on the key pressed
-      let newDirection = null;
-      if ((key === "ArrowUp"|| key === "w") && currentDirection.y === 0) newDirection = { x: 0, y: -1 };
-      if ((key === "ArrowDown"|| key === "s") && currentDirection.y === 0) newDirection = { x: 0, y: 1 };
-      if ((key === "ArrowLeft"|| key === "a") && currentDirection.x === 0) newDirection = { x: -1, y: 0 };
-      if ((key === "ArrowRight"|| key === "d") && currentDirection.x === 0) newDirection = { x: 1, y: 0 };
+      // Check if enough time has passed since the last direction change
+      if (now - lastDirectionChangeTime >= directionChangeCooldown) {
+        let newDirection = null;
 
-      // Buffer the new direction if it's valid and doesn't reverse the current direction
-      if (newDirection) {
-        directionBuffer = newDirection;
+        // Calculate the new direction based on the key pressed
+        if (key === "ArrowUp" && currentDirection.y === 0) newDirection = { x: 0, y: -1 };
+        if (key === "ArrowDown" && currentDirection.y === 0) newDirection = { x: 0, y: 1 };
+        if (key === "ArrowLeft" && currentDirection.x === 0) newDirection = { x: -1, y: 0 };
+        if (key === "ArrowRight" && currentDirection.x === 0) newDirection = { x: 1, y: 0 };
+
+        // Apply the new direction if it's valid
+        if (newDirection) {
+          entities[0].direction = newDirection;
+          lastDirectionChangeTime = now; // Update the last direction change time
+        }
       }
     });
 
     function gameLoop() {
       if (entities[0].alive) {
-        // Apply the buffered direction if it exists
-        if (directionBuffer) {
-          entities[0].direction = directionBuffer;
-          directionBuffer = null; // Clear the buffer after applying
-        }
-
         // Move the snake
         entities = movementSystem(entities);
 
