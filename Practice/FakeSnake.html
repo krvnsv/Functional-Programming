@@ -81,7 +81,8 @@
     });
 
     // Check for collisions between the snake and food/bad food
-    let foodEaten = 0; // Moved outside to persist across frames
+    let foodEaten = 0; // Temporary counter for spawning bad food
+    let totalScore = 0; // Persistent score based on food eaten
     const collisionSystem = entities => {
       const snake = entities.find(e => e.type === "snake");
       const food = entities.find(e => e.type === "food");
@@ -92,15 +93,18 @@
 
         // Check collision with food
         if (food && head.x === food.position.x && head.y === food.position.y) {
+          console.log("Food eaten detected, current foodEaten:", foodEaten, "totalScore:", totalScore);
           // Snake eats the food
           snake.body.push({ ...snake.body[snake.body.length - 1] }); // Grow the snake
-          foodEaten++; // Track the number of "1's" eaten
+          foodEaten++; // Increment temporary counter
+          totalScore++; // Increment total score
           entities = entities.filter(e => e.type !== "food").concat(spawnFood()); // Spawn new food
 
           // Check if a new "0" should spawn
           if (foodEaten >= Math.floor(Math.random() * 4) + 3) { // Spawn after 3-6 "1's"
             entities.push(spawnBadFood());
-            foodEaten = 0; // Reset counter
+            foodEaten = 0; // Reset temporary counter, but keep totalScore
+            console.log("Bad food spawned, resetting foodEaten to 0, totalScore:", totalScore);
           }
         }
 
@@ -219,6 +223,13 @@
           ctx.fillText("0", entity.position.x * 20 + 10, entity.position.y * 20 + 17);
         }
       });
+
+      // Display the current score
+      ctx.fillStyle = "white";
+      ctx.font = "16px Arial";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(`Score: ${totalScore}`, 10, 10);
     };
 
     // --- Initial Game State ---
@@ -251,10 +262,15 @@
       if ((key === "ArrowRight" || key === "d") && currentDirection.x === 0) newDirection = { x: 1, y: 0 };
 
       // Buffer the new direction if it’s valid and doesn’t reverse the current direction
-      if (newDirection) {
+      if (newDirection && !isOppositeDirection(currentDirection, newDirection)) {
         directionBuffer = newDirection;
       }
     });
+
+    // --- Helper Function to Check Opposite Directions ---
+    function isOppositeDirection(current, newDir) {
+      return (current.x === -newDir.x && current.y === -newDir.y);
+    }
 
     function gameLoop() {
       if (entities[0].alive) {
@@ -283,7 +299,7 @@
         setTimeout(gameLoop, 100); // 100ms delay for slower movement
       } else {
         // Game over: restart the game
-        alert("Game Over! Neo bit his own tail or hit a 0. Restarting...");
+        alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore}. Restarting...`);
         location.reload(); // Reload the page to restart the game
       }
     }
