@@ -78,8 +78,25 @@
         const head = snake.body[0];
         if (head.x === food.position.x && head.y === food.position.y) {
           // Snake eats the food
-          snake.body.push({ ...snake.body[snake.body.length - 1]}); // Grow the snake
+          snake.body.push({ ...snake.body[snake.body.length - 1] }); // Grow the snake
           return entities.filter(e => e.type !== "food").concat(spawnFood()); // Spawn new food
+        }
+      }
+      return entities;
+    };
+
+    // Check for self-collision (head collides with tail)
+    const selfCollisionSystem = entities => {
+      const snake = entities.find(e => e.type === "snake");
+      if (snake) {
+        const head = snake.body[0];
+        // Check if the head collides with any other segment
+        for (let i = 1; i < snake.body.length; i++) {
+          if (head.x === snake.body[i].x && head.y === snake.body[i].y) {
+            // Snake collides with itself
+            snake.alive = false; // Snake dies
+            break;
+          }
         }
       }
       return entities;
@@ -188,11 +205,18 @@
         // Check for collisions
         entities = collisionSystem(entities);
 
+        // Check for self-collision
+        entities = selfCollisionSystem(entities);
+
         // Render the snake and food
         renderSystem(entities, canvasEl);
 
         // Slow down the game loop
-        setTimeout(gameLoop, 100); // 200ms delay for slower movement
+        setTimeout(gameLoop, 200); // 200ms delay for slower movement
+      } else {
+        // Game over: restart the game
+        alert("Game Over! The snake collided with itself. Restarting...");
+        location.reload(); // Reload the page to restart the game
       }
     }
 
