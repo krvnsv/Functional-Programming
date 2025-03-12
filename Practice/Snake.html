@@ -69,17 +69,53 @@
       }
     });
 
-    // Check for collisions between the snake and food
+    // Spawn a new "0" (bad food) at a random position
+    const spawnBadFood = () => ({
+      id: "badFood",
+      type: "badFood",
+      position: {
+        x: Math.floor(Math.random() * 20),
+        y: Math.floor(Math.random() * 20)
+      },
+      spawnTime: Date.now() // Track when the bad food was spawned
+    });
+
+    // Check for collisions between the snake and food/bad food
+    let foodEaten = 0; // Moved outside to persist across frames
     const collisionSystem = entities => {
       const snake = entities.find(e => e.type === "snake");
       const food = entities.find(e => e.type === "food");
+      const badFood = entities.find(e => e.type === "badFood");
 
-      if (snake && food) {
+      if (snake) {
         const head = snake.body[0];
-        if (head.x === food.position.x && head.y === food.position.y) {
+
+        // Check collision with food
+        if (food && head.x === food.position.x && head.y === food.position.y) {
           // Snake eats the food
           snake.body.push({ ...snake.body[snake.body.length - 1] }); // Grow the snake
-          return entities.filter(e => e.type !== "food").concat(spawnFood()); // Spawn new food
+          foodEaten++; // Track the number of "1's" eaten
+          entities = entities.filter(e => e.type !== "food").concat(spawnFood()); // Spawn new food
+
+          // Check if a new "0" should spawn
+          if (foodEaten >= Math.floor(Math.random() * 4) + 3) { // Spawn after 3-6 "1's"
+            entities.push(spawnBadFood());
+            foodEaten = 0; // Reset counter
+          }
+        }
+
+        // Check collision with bad food (3x4 hitbox)
+        if (badFood) {
+          const badX = badFood.position.x;
+          const badY = badFood.position.y;
+          // Check if the snake's head is within a 3x4 grid square area around the bad food
+          if (
+            head.x >= badX - 1 && head.x <= badX + 1 && // 3 grid squares wide (60px)
+            head.y >= badY - 2 && head.y <= badY + 2   // 4 grid squares tall (80px)
+          ) {
+            // Snake collides with bad food
+            snake.alive = false; // Snake dies
+          }
         }
       }
       return entities;
@@ -100,6 +136,17 @@
         }
       }
       return entities;
+    };
+
+    // Remove bad food after 5 seconds
+    const badFoodSystem = entities => {
+      const now = Date.now();
+      return entities.filter(entity => {
+        if (entity.type === "badFood" && now - entity.spawnTime >= 10000) {
+          return false; // Remove bad food after 5 seconds
+        }
+        return true;
+      });
     };
 
     const renderSystem = (entities, canvas) => {
@@ -156,15 +203,20 @@
           ctx.moveTo(head.x * 20 + eyeOffsetX + eyeWidth, head.y * 20 + eyeOffsetY); // Start point
           ctx.lineTo(head.x * 20 + (20 - eyeOffsetX) - eyeWidth, head.y * 20 + eyeOffsetY); // End point
           ctx.stroke();
-        } 
-        
-        else if (entity.type === "food") {
+        } else if (entity.type === "food") {
           // Draw the "1" (food) in lime green
           ctx.fillStyle = "lime"; // Food color
           ctx.font = "20px Arial";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText("1", entity.position.x * 20 + 10, entity.position.y * 20 + 10);
+        } else if (entity.type === "badFood") {
+          // Draw the "0" (bad food) in red
+          ctx.fillStyle = "lime"; // Bad food color
+          ctx.font = "90px Arial"; // Larger font for the "0" (doubled from 40px)
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("0", entity.position.x * 20 + 10, entity.position.y * 20 + 17);
         }
       });
     };
@@ -198,7 +250,7 @@
       if ((key === "ArrowLeft" || key === "a") && currentDirection.x === 0) newDirection = { x: -1, y: 0 };
       if ((key === "ArrowRight" || key === "d") && currentDirection.x === 0) newDirection = { x: 1, y: 0 };
 
-      // Buffer the new direction if it's valid and doesn't reverse the current direction
+      // Buffer the new direction if it’s valid and doesn’t reverse the current direction
       if (newDirection) {
         directionBuffer = newDirection;
       }
@@ -221,6 +273,9 @@
         // Check for self-collision
         entities = selfCollisionSystem(entities);
 
+        // Remove bad food after 5 seconds
+        entities = badFoodSystem(entities);
+
         // Render the snake and food
         renderSystem(entities, canvasEl);
 
@@ -228,7 +283,7 @@
         setTimeout(gameLoop, 100); // 100ms delay for slower movement
       } else {
         // Game over: restart the game
-        alert("Game Over! Neo bit his own tail. Restarting...");
+        alert("Game Over! Neo bit his own tail or hit a 0. Restarting...");
         location.reload(); // Reload the page to restart the game
       }
     }
