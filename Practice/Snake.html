@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Snake Game</title>
+  <title>Neo Snake</title>
   <style>
     body, html {
       margin: 0;
@@ -59,15 +59,42 @@
         return entity;
       });
 
+    // Spawn a new "1" (food) at a random position
+    const spawnFood = () => ({
+      id: "food",
+      type: "food",
+      position: {
+        x: Math.floor(Math.random() * 20),
+        y: Math.floor(Math.random() * 20)
+      }
+    });
+
+    // Check for collisions between the snake and food
+    const collisionSystem = entities => {
+      const snake = entities.find(e => e.type === "snake");
+      const food = entities.find(e => e.type === "food");
+
+      if (snake && food) {
+        const head = snake.body[0];
+        if (head.x === food.position.x && head.y === food.position.y) {
+          // Snake eats the food
+          snake.body.push({ ...snake.body[snake.body.length - 1]}); // Grow the snake
+          return entities.filter(e => e.type !== "food").concat(spawnFood()); // Spawn new food
+        }
+      }
+      return entities;
+    };
+
     const renderSystem = (entities, canvas) => {
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       entities.forEach(entity => {
         if (entity.type === "snake") {
-          ctx.fillStyle = "lime"; // Body
-          ctx.strokeStyle = "darkgreen"; // Border
-          ctx.lineWidth = 2;
+          // Draw the snake body with a darker green border
+          ctx.fillStyle = "lime"; // Body color
+          ctx.strokeStyle = "darkgreen"; // Border color
+          ctx.lineWidth = 2; // Border thickness
 
           entity.body.forEach(segment => {
             ctx.fillRect(segment.x * 20, segment.y * 20, 20, 20); // Fill the segment
@@ -101,6 +128,13 @@
             0, Math.PI * 2 // Full circle
           );
           ctx.fill();
+        } else if (entity.type === "food") {
+          // Draw the "1" (food) in lime green
+          ctx.fillStyle = "lime"; // Food color
+          ctx.font = "20px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("1", entity.position.x * 20 + 10, entity.position.y * 20 + 10);
         }
       });
     };
@@ -113,11 +147,11 @@
         body: [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }],
         direction: { x: 1, y: 0 },
         alive: true
-      })
+      }),
+      spawnFood() // Spawn initial food
     ];
 
     const canvasEl = document.getElementById("gameCanvas");
-    const canvasMonad = CanvasMonad(canvasEl);
 
     // Direction buffer to store the next direction change
     let directionBuffer = null;
@@ -151,11 +185,14 @@
         // Move the snake
         entities = movementSystem(entities);
 
-        // Render the snake
-        renderSystem(entities, canvasMonad.getOrElse(canvasEl));
+        // Check for collisions
+        entities = collisionSystem(entities);
+
+        // Render the snake and food
+        renderSystem(entities, canvasEl);
 
         // Slow down the game loop
-        setTimeout(gameLoop, 200); // 200ms delay for slower movement
+        setTimeout(gameLoop, 100); // 200ms delay for slower movement
       }
     }
 
