@@ -118,34 +118,47 @@
             ctx.strokeRect(segment.x * 20, segment.y * 20, 20, 20); // Draw the border
           });
 
-          // Draw the snake's eyes on the head
+          // Draw Neo's glasses on the snake's head
           const head = entity.body[0];
-          const eyeRadius = 3; // Radius of the eyes
+          const eyeWidth = 5; // Width of each eye (oval)
+          const eyeHeight = 3; // Height of each eye (oval)
           const eyeOffsetX = 5; // Horizontal offset from the center of the head
-          const eyeOffsetY = 5; // Vertical offset from the center of the head
+          const eyeOffsetY = 6; // Vertical offset from the center of the head
 
-          ctx.fillStyle = "black"; // Eye color
+          ctx.fillStyle = "black"; // Glasses color
 
-          // Left eye
+          // Left eye (oval)
           ctx.beginPath();
-          ctx.arc(
+          ctx.ellipse(
             head.x * 20 + eyeOffsetX, // X position
             head.y * 20 + eyeOffsetY, // Y position
-            eyeRadius, // Radius
-            0, Math.PI * 2 // Full circle
+            eyeWidth, // Horizontal radius
+            eyeHeight, // Vertical radius
+            0, 0, Math.PI * 2 // Full ellipse
           );
           ctx.fill();
 
-          // Right eye
+          // Right eye (oval)
           ctx.beginPath();
-          ctx.arc(
+          ctx.ellipse(
             head.x * 20 + (20 - eyeOffsetX), // X position
             head.y * 20 + eyeOffsetY, // Y position
-            eyeRadius, // Radius
-            0, Math.PI * 2 // Full circle
+            eyeWidth, // Horizontal radius
+            eyeHeight, // Vertical radius
+            0, 0, Math.PI * 2 // Full ellipse
           );
           ctx.fill();
-        } else if (entity.type === "food") {
+
+          // Draw the bridge between the glasses (a horizontal line)
+          ctx.strokeStyle = "black"; // Bridge color
+          ctx.lineWidth = 1; // Bridge thickness
+          ctx.beginPath();
+          ctx.moveTo(head.x * 20 + eyeOffsetX + eyeWidth, head.y * 20 + eyeOffsetY); // Start point
+          ctx.lineTo(head.x * 20 + (20 - eyeOffsetX) - eyeWidth, head.y * 20 + eyeOffsetY); // End point
+          ctx.stroke();
+        } 
+        
+        else if (entity.type === "food") {
           // Draw the "1" (food) in lime green
           ctx.fillStyle = "lime"; // Food color
           ctx.font = "20px Arial";
@@ -212,10 +225,10 @@
         renderSystem(entities, canvasEl);
 
         // Slow down the game loop
-        setTimeout(gameLoop, 200); // 200ms delay for slower movement
+        setTimeout(gameLoop, 100); // 100ms delay for slower movement
       } else {
         // Game over: restart the game
-        alert("Game Over! The snake collided with itself. Restarting...");
+        alert("Game Over! Neo bit his own tail. Restarting...");
         location.reload(); // Reload the page to restart the game
       }
     }
