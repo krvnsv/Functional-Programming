@@ -19,13 +19,7 @@
 <body>
   <canvas id="gameCanvas" width="400" height="400"></canvas>
   <script>
-    // --- Maybe Monad ---
-    const Maybe = value => ({
-      isJust: value !== null && value !== undefined,
-      map: f => (value != null ? Maybe(f(value)) : Maybe(null)),
-      chain: f => (value != null ? f(value) : Maybe(null)),
-      getOrElse: def => (value != null ? value : def)
-    });
+    
 
     // --- CanvasMonad ---
     const CanvasMonad = canvas => ({
@@ -36,15 +30,6 @@
       getContext: type => (canvas != null ? canvas.getContext(type) : null)
     });
 
-    // --- InputMonad ---
-    const InputMonad = target => ({
-      subscribe: (eventType, handler) => {
-        target.addEventListener(eventType, handler);
-        return InputMonad(target);
-      },
-      map: f => InputMonad(f(target)),
-      get: () => target
-    });
 
     // --- Entity Creation Helper ---
     const createEntity = components => ({ ...components });
@@ -93,7 +78,7 @@
         }
       }
       
-      // Bad food collision (3x4 hitbox)
+      // Bad food collision
       if (badFood) {
         const badX = badFood.position.x;
         const badY = badFood.position.y;
@@ -225,7 +210,7 @@
         ctx.font = "16px Arial";
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
-        ctx.fillText(`Score: ${totalScore}`, 10, 10);
+        ctx.fillText(`Score: ${totalScore.toString(2)}`, 10, 10);
       });
       
       return entities;
@@ -312,7 +297,7 @@
         
         setTimeout(gameLoop, 100);
       } else {
-        alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore}. Restarting...`);
+        alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Restarting...`);
         location.reload();
       }
     }
