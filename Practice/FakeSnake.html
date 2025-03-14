@@ -306,7 +306,6 @@
             entities = selfCollisionSystem(entities);
             entities = badFoodSystem(entities);
             
-            // Render
             renderSystem(entities, canvasMonad);
             
             setTimeout(gameLoop, 100);

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>2.5D ECS Raycasting Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: black;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        // --- Maybe Monad ---
+        const Maybe = value => ({
+            isJust: value !== null && value !== undefined,
+            map: f => (value != null ? Maybe(f(value)) : Maybe(null)),
+            chain: f => (value != null ? f(value) : Maybe(null)),
+            getOrElse: def => (value != null ? value : def)
+        });
+
+        // --- CanvasMonad ---
+        const CanvasMonad = canvas => ({
+            isJust: canvas !== null && canvas !== undefined,
+            map: f => (canvas != null ? CanvasMonad(f(canvas)) : CanvasMonad(null)),
+            chain: f => (canvas != null ? f(canvas) : CanvasMonad(null)),
+            getOrElse: def => (canvas != null ? canvas : def),
+            getContext: type => (canvas != null ? canvas.getContext(type) : null)
+        });
+
+        // --- InputMonad ---
+        const InputMonad = target => ({
+            subscribe: (eventType, handler) => {
+                target.addEventListener(eventType, handler);
+                return InputMonad(target);
+            },
+            map: f => InputMonad(f(target)),
+            get: () => target
+        });
+
+        // --- Entity Creation Helper ---
+        const createEntity = components => ({ ...components });
+
+        // --- Map Definition (25x25) ---
+        const map = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,1,0,1],
+            [1,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,1,0,0,0,1,0,1,0,1],
+            [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+            [1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        // --- Systems ---
+        const inputSystem = (entities, inputMaybe) =>
+            entities.map(entity => {
+                if (entity.id === "player" && entity.position) {
+                    const input = inputMaybe.getOrElse({ up: false, down: false, left: false, right: false });
+                    const speed = 0.1;
+                    let newX = entity.position.x;
+                    let newY = entity.position.y;
+                    if (input.up) {
+                        newX += Math.cos(entity.position.angle) * speed;
+                        newY += Math.sin(entity.position.angle) * speed;
+                    }
+                    if (input.down) {
+                        newX -= Math.cos(entity.position.angle) * speed;
+                        newY -= Math.sin(entity.position.angle) * speed;
+                    }
+                    if (input.left) entity.position.angle -= 0.05;
+                    if (input.right) entity.position.angle += 0.05;
+                    
+                    if (map[Math.floor(newY)]?.[Math.floor(newX)] === 0) {
+                        return { ...entity, position: { ...entity.position, x: newX, y: newY } };
+                    }
+                }
+                return entity;
+            });
+
+        const renderSystem = (entities, canvasMonad) => {
+            canvasMonad.chain(canvas => {
+                const ctx = canvas.getContext("2d");
+                ctx.fillStyle = "black";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "white";
+
+                const player = entities.find(e => e.id === "player").position;
+                
+                for (let i = 0; i < canvas.width; i += 5) {
+                    let rayAngle = player.angle + (i / canvas.width - 0.5) * Math.PI / 3;
+                    let x = player.x, y = player.y;
+                    while (map[Math.floor(y)]?.[Math.floor(x)] === 0) {
+                        x += Math.cos(rayAngle) * 0.1;
+                        y += Math.sin(rayAngle) * 0.1;
+                    }
+                    const dist = Math.sqrt((x - player.x) ** 2 + (y - player.y) ** 2);
+                    ctx.fillRect(i, canvas.height / 2 - 100 / dist, 5, 200 / dist);
+                }
+                return CanvasMonad(canvas);
+            });
+            return entities;
+        };
+
+        // --- Composition Helper ---
+        const composeSystems = systems =>
+            systems.reduceRight(
+                (acc, system) => state => system(acc(state)),
+                state => state
+            );
+
+        // --- Initial Game State ---
+        let entities = [
+            createEntity({ id: "player", position: { x: 2, y: 2, angle: 0 } })
+        ];
+
+        // --- Encapsulate Input and Canvas ---
+        let rawInput = { up: false, down: false, left: false, right: false };
+        let inputMaybe = Maybe(rawInput);
+        const canvasEl = document.getElementById("gameCanvas");
+        let canvasMonad = CanvasMonad(canvasEl);
+
+        // --- Wrap User Input Event Subscriptions in an InputMonad ---
+        InputMonad(document)
+            .subscribe("keydown", e => {
+                if (e.key === "ArrowUp") rawInput.up = true;
+                if (e.key === "ArrowDown") rawInput.down = true;
+                if (e.key === "ArrowLeft") rawInput.left = true;
+                if (e.key === "ArrowRight") rawInput.right = true;
+            })
+            .subscribe("keyup", e => {
+                if (e.key === "ArrowUp") rawInput.up = false;
+                if (e.key === "ArrowDown") rawInput.down = false;
+                if (e.key === "ArrowLeft") rawInput.left = false;
+                if (e.key === "ArrowRight") rawInput.right = false;
+            });
+
+        // --- Main Game Loop ---
+        const gameUpdate = composeSystems([
+            state => inputSystem(state, inputMaybe),
+            state => renderSystem(state, canvasMonad)
+        ]);
+
+        function gameLoop() {
+            entities = gameUpdate(entities);
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
