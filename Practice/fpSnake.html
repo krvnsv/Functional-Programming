@@ -1,33 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Neo Snake (Functional ECS with Input)</title>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #000;
-    }
-    canvas {
-      display: block;
-      background: #111;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Neo Snake (Functional ECS with Input)</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        canvas {
+            padding: 0;
+            margin: auto;
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #111;
+        }
+    </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
-  <script>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
     
 
     // --- CanvasMonad ---
     const CanvasMonad = canvas => ({
-      isJust: canvas !== null && canvas !== undefined,
-      map: f => (canvas != null ? CanvasMonad(f(canvas)) : CanvasMonad(null)),
-      chain: f => (canvas != null ? f(canvas) : CanvasMonad(null)),
-      getOrElse: def => (canvas != null ? canvas : def),
-      getContext: type => (canvas != null ? canvas.getContext(type) : null)
+        isJust: canvas !== null && canvas !== undefined,
+        map: f => (canvas != null ? CanvasMonad(f(canvas)) : CanvasMonad(null)),
+        chain: f => (canvas != null ? f(canvas) : CanvasMonad(null)),
+        getOrElse: def => (canvas != null ? canvas : def),
+        getContext: type => (canvas != null ? canvas.getContext(type) : null)
     });
 
 
@@ -37,71 +44,71 @@
     // --- Systems ---
     // Input System: Updates snake direction from buffered input
     const inputSystem = (entities, directionBuffer) => {
-      if (!directionBuffer) return entities;
-      
-      return entities.map(entity => {
-        if (entity.type === "snake" && entity.alive) {
-          return { ...entity, direction: directionBuffer };
-        }
-        return entity;
-      });
+        if (!directionBuffer) return entities;
+        
+        return entities.map(entity => {
+            if (entity.type === "snake" && entity.alive) {
+            return { ...entity, direction: directionBuffer };
+            }
+            return entity;
+        });
     };
 
     // Collision System: Detects collisions and sets flags
     const collisionSystem = entities => {
-      const snake = entities.find(e => e.type === "snake");
-      if (!snake || !snake.alive) return entities;
-      
-      const head = snake.body[0];
-      const food = entities.find(e => e.type === "food");
-      const badFood = entities.find(e => e.type === "badFood");
-      
-      let newEntities = [...entities];
-      let snakeAteFood = false;
-      
-      // Food collision
-      if (food && head.x === food.position.x && head.y === food.position.y) {
-        foodEaten++;
-        totalScore++;
-        snakeAteFood = true;
+        const snake = entities.find(e => e.type === "snake");
+        if (!snake || !snake.alive) return entities;
         
-        // Remove the eaten food
-        newEntities = newEntities.filter(e => e.type !== "food");
+        const head = snake.body[0];
+        const food = entities.find(e => e.type === "food");
+        const badFood = entities.find(e => e.type === "badFood");
         
-        // Add a new food
-        newEntities.push(spawnFood());
+        let newEntities = [...entities];
+        let snakeAteFood = false;
         
-        // Potentially spawn bad food
-        if (foodEaten >= Math.floor(Math.random() * 4) + 3) {
-          newEntities.push(spawnBadFood());
-          foodEaten = 0;
+        // Food collision
+        if (food && head.x === food.position.x && head.y === food.position.y) {
+            foodEaten++;
+            totalScore++;
+            snakeAteFood = true;
+            
+            // Remove the eaten food
+            newEntities = newEntities.filter(e => e.type !== "food");
+            
+            // Add a new food
+            newEntities.push(spawnFood());
+            
+            // Potentially spawn bad food
+            if (foodEaten >= Math.floor(Math.random() * 4) + 3) {
+            newEntities.push(spawnBadFood());
+            foodEaten = 0;
+            }
         }
-      }
-      
-      // Bad food collision
-      if (badFood) {
-        const badX = badFood.position.x;
-        const badY = badFood.position.y;
-        if (
-          head.x >= badX - 1 && head.x <= badX + 1 &&
-          head.y >= badY - 2 && head.y <= badY + 2
-        ) {
-          newEntities = newEntities.map(e => {
+        
+        // Bad food collision
+        if (badFood) {
+            const badX = badFood.position.x;
+            const badY = badFood.position.y;
+            if (
+            head.x >= badX - 1 && head.x <= badX + 1 &&
+            head.y >= badY - 2 && head.y <= badY + 2
+            ) {
+            newEntities = newEntities.map(e => {
+                if (e.type === "snake") {
+                return { ...e, alive: false };
+                }
+                return e;
+            });
+            }
+        }
+        
+        // Update the snake to reflect if it ate food
+        return newEntities.map(e => {
             if (e.type === "snake") {
-              return { ...e, alive: false };
+            return { ...e, ateFood: snakeAteFood };
             }
             return e;
-          });
-        }
-      }
-      
-      // Update the snake to reflect if it ate food
-      return newEntities.map(e => {
-        if (e.type === "snake") {
-          return { ...e, ateFood: snakeAteFood };
-        }
-        return e;
-      });
+        });
     };
 
     // Movement System: Updates snake position and handles growth
@@ -161,49 +168,49 @@
 
     // Render System: Draws entities on the canvas
     const renderSystem = (entities, canvasMonad) => {
-      canvasMonad.chain(canvas => {
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvasMonad.chain(canvas => {
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        entities.forEach(entity => {
-          if (entity.type === "snake" && entity.alive) {
-            ctx.fillStyle = "lime";
-            ctx.strokeStyle = "darkgreen";
-            ctx.lineWidth = 2;
-            entity.body.forEach(segment => {
-              ctx.fillRect(segment.x * 20, segment.y * 20, 20, 20);
-              ctx.strokeRect(segment.x * 20, segment.y * 20, 20, 20);
-            });
+            entities.forEach(entity => {
+            if (entity.type === "snake" && entity.alive) {
+                ctx.fillStyle = "lime";
+                ctx.strokeStyle = "darkgreen";
+                ctx.lineWidth = 2;
+                entity.body.forEach(segment => {
+                ctx.fillRect(segment.x * 20, segment.y * 20, 20, 20);
+                ctx.strokeRect(segment.x * 20, segment.y * 20, 20, 20);
+                });
 
-            // Draw Neo's glasses on the head
-            const head = entity.body[0];
-            const eyeWidth = 5, eyeHeight = 3, eyeOffsetX = 5, eyeOffsetY = 6;
-            ctx.fillStyle = "black";
-            ctx.beginPath();
-            ctx.ellipse(head.x * 20 + eyeOffsetX, head.y * 20 + eyeOffsetY, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(head.x * 20 + (20 - eyeOffsetX), head.y * 20 + eyeOffsetY, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(head.x * 20 + eyeOffsetX + eyeWidth, head.y * 20 + eyeOffsetY);
-            ctx.lineTo(head.x * 20 + (20 - eyeOffsetX) - eyeWidth, head.y * 20 + eyeOffsetY);
-            ctx.stroke();
-          } else if (entity.type === "food") {
-            ctx.fillStyle = "lime";
-            ctx.font = "20px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("1", entity.position.x * 20 + 10, entity.position.y * 20 + 10);
-          } else if (entity.type === "badFood") {
-            ctx.fillStyle = "lime";
-            ctx.font = "90px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("0", entity.position.x * 20 + 10, entity.position.y * 20 + 17);
-          }
+                // Draw Neo's glasses on the head
+                const head = entity.body[0];
+                const eyeWidth = 5, eyeHeight = 3, eyeOffsetX = 5, eyeOffsetY = 6;
+                ctx.fillStyle = "black";
+                ctx.beginPath();
+                ctx.ellipse(head.x * 20 + eyeOffsetX, head.y * 20 + eyeOffsetY, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(head.x * 20 + (20 - eyeOffsetX), head.y * 20 + eyeOffsetY, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(head.x * 20 + eyeOffsetX + eyeWidth, head.y * 20 + eyeOffsetY);
+                ctx.lineTo(head.x * 20 + (20 - eyeOffsetX) - eyeWidth, head.y * 20 + eyeOffsetY);
+                ctx.stroke();
+            } else if (entity.type === "food") {
+                ctx.fillStyle = "lime";
+                ctx.font = "20px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("1", entity.position.x * 20 + 10, entity.position.y * 20 + 10);
+            } else if (entity.type === "badFood") {
+                ctx.fillStyle = "lime";
+                ctx.font = "90px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("0", entity.position.x * 20 + 10, entity.position.y * 20 + 17);
+            }
         });
 
         ctx.fillStyle = "white";
@@ -213,37 +220,37 @@
         ctx.fillText(`Score: ${totalScore.toString(2)}`, 10, 10);
       });
       
-      return entities;
+        return entities;
     };
 
     // --- Helper Functions ---
     const spawnFood = () => ({
-      id: "food",
-      type: "food",
-      position: { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) }
+        id: "food",
+        type: "food",
+        position: { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) }
     });
 
     const spawnBadFood = () => ({
-      id: "badFood",
-      type: "badFood",
-      position: { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) },
-      spawnTime: Date.now()
+        id: "badFood",
+        type: "badFood",
+        position: { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) },
+        spawnTime: Date.now()
     });
 
     const isOppositeDirection = (current, newDir) =>
-      current.x === -newDir.x && current.y === -newDir.y;
+        current.x === -newDir.x && current.y === -newDir.y;
 
     // --- Initial Game State ---
     let entities = [
-      createEntity({
-        id: "snake",
-        type: "snake",
-        body: [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }],
-        direction: { x: 1, y: 0 },
-        alive: true,
-        ateFood: false
-      }),
-      spawnFood()
+        createEntity({
+            id: "snake",
+            type: "snake",
+            body: [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }],
+            direction: { x: 1, y: 0 },
+            alive: true,
+            ateFood: false
+        }),
+        spawnFood()
     ];
 
     let foodEaten = 0;
@@ -256,50 +263,50 @@
 
     // --- Input Handling ---
     document.addEventListener("keydown", e => {
-      const snake = entities.find(entity => entity.type === "snake");
-      if (!snake || !snake.alive) return;
-      
-      const currentDirection = snake.direction;
-      let newDirection = null;
-      
-      if ((e.key === "ArrowUp" || e.key === "w") && currentDirection.y === 0) {
-        newDirection = { x: 0, y: -1 };
-      } else if ((e.key === "ArrowDown" || e.key === "s") && currentDirection.y === 0) {
-        newDirection = { x: 0, y: 1 };
-      } else if ((e.key === "ArrowLeft" || e.key === "a") && currentDirection.x === 0) {
-        newDirection = { x: -1, y: 0 };
-      } else if ((e.key === "ArrowRight" || e.key === "d") && currentDirection.x === 0) {
-        newDirection = { x: 1, y: 0 };
-      }
-      
-      if (newDirection && !isOppositeDirection(currentDirection, newDirection)) {
-        directionBuffer = newDirection;
-      }
+        const snake = entities.find(entity => entity.type === "snake");
+        if (!snake || !snake.alive) return;
+        
+        const currentDirection = snake.direction;
+        let newDirection = null;
+        
+        if ((e.key === "ArrowUp" || e.key === "w") && currentDirection.y === 0) {
+            newDirection = { x: 0, y: -1 };
+        } else if ((e.key === "ArrowDown" || e.key === "s") && currentDirection.y === 0) {
+            newDirection = { x: 0, y: 1 };
+        } else if ((e.key === "ArrowLeft" || e.key === "a") && currentDirection.x === 0) {
+            newDirection = { x: -1, y: 0 };
+        } else if ((e.key === "ArrowRight" || e.key === "d") && currentDirection.x === 0) {
+            newDirection = { x: 1, y: 0 };
+        }
+        
+        if (newDirection && !isOppositeDirection(currentDirection, newDirection)) {
+            directionBuffer = newDirection;
+        }
     });
 
     // --- Game Loop ---
     function gameLoop() {
       const snake = entities.find(entity => entity.type === "snake");
       
-      if (snake && snake.alive) {
-        // Apply input
-        entities = inputSystem(entities, directionBuffer);
-        directionBuffer = null; // Clear the buffer after applying
-        
-        // Apply other systems
-        entities = movementSystem(entities);
-        entities = collisionSystem(entities);
-        entities = selfCollisionSystem(entities);
-        entities = badFoodSystem(entities);
-        
-        // Render
-        renderSystem(entities, canvasMonad);
-        
-        setTimeout(gameLoop, 100);
-      } else {
-        alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Restarting...`);
-        location.reload();
-      }
+        if (snake && snake.alive) {
+            // Apply input
+            entities = inputSystem(entities, directionBuffer);
+            directionBuffer = null; // Clear the buffer after applying
+            
+            // Apply other systems
+            entities = movementSystem(entities);
+            entities = collisionSystem(entities);
+            entities = selfCollisionSystem(entities);
+            entities = badFoodSystem(entities);
+            
+            // Render
+            renderSystem(entities, canvasMonad);
+            
+            setTimeout(gameLoop, 100);
+        } else {
+            alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Restarting...`);
+            location.reload();
+        }
     }
 
     gameLoop();
