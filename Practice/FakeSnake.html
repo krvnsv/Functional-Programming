@@ -2,56 +2,104 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Neo Snake (Functional ECS with Input)</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: #000;
-        }
-        #scoreDisplay {
-            position: absolute;
-            top: 50px;
-            left: 0;
-            right: 0;
-            color: lightgray;
-            font-family: Arial, sans-serif;
-            font-size: 24px;
-            text-align: center;
-            z-index: 100;
-            background: #111;
-            width: 600px;
-            margin: auto;
-
-        }
-        canvas {
-            padding: 0;
-            margin: auto;
-            display: block;
-            position: absolute;
-            top: 50px;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #111;
-        }
-    </style>
+    <title>Neo Snake</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="scoreDisplay">
-        <span id="currentScore">Score: 0</span> | <span id="topScore">Top Score: 0</span>
+    <header id="gameHeader">
+        wake up <span class="highlight">NeoSnake</span>... the matrix has you
+    </header>
+    <div id="gameContainer">
+        <div id="leaderboardContainer">
+            <div id="leaderboardTitle">Leaderboard</div>
+            <table id="leaderboard">
+                <thead>
+                    <tr>
+                        <th>#</th> <!-- Changed from "Rank" to "#" -->
+                        <th>Name</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                    <!-- Leaderboard rows will be populated here -->
+                </tbody>
+            </table>
+        </div>
+        <div id="gameArea">
+            <canvas id="gameCanvas" width="600" height="600"></canvas>
+            <div id="scoreDisplay">
+                <span id="currentScore">Score: 0</span> | <span id="topScore">Top Score: 0</span>
+            </div>
+        </div>
+        <div id="buttonsContainer">
+            <button class="gameButton">Start</button>
+            <button class="gameButton">Reset Score</button>
+            <br><br/>
+            <button class="gameButton">Difficulty 1</button>
+            <button class="gameButton">Difficulty 2</button>
+            <button class="gameButton">Difficulty 3</button>
+        </div>
     </div>
-    <canvas id="gameCanvas" width="600" height="600"></canvas>
     <script>
-
     // --- Constant for cell size ---
     const CELL_SIZE = 30;
     const GRID_COUNT = 20;
 
+    // --- Matrix character scores in binary ---
+    const matrixCharacters = [
+        { name: "The Architect", score: 255 }, // 11111111 in binary
+        { name: "Morpheus", score: 127 },      // 1111111 in binary
+        { name: "Trinity", score: 63 },        // 111111 in binary
+        { name: "Agent Smith", score: 31 },    // 11111 in binary
+        { name: "Cypher", score: 15 },         // 1111 in binary
+        { name: "Spoon Boy", score: 7 }        // 111 in binary
+    ];
+
     // --- Initialize top score from localStorage ---
     let topScore = parseInt(localStorage.getItem('TopScore')) || 0;
     document.getElementById('topScore').textContent = `Top Score: ${topScore.toString(2)}`;
+
+    // --- Initialize leaderboard ---
+    function updateLeaderboard() {
+        const leaderboardBody = document.getElementById('leaderboardBody');
+        leaderboardBody.innerHTML = '';
+        
+        // Create a copy of the matrix characters
+        let leaderboardData = [...matrixCharacters];
+        
+        // Add the player's score
+        const playerEntry = { name: "The Chosen One", score: topScore, isPlayer: true };
+        leaderboardData.push(playerEntry);
+        
+        // Sort by score in descending order
+        leaderboardData.sort((a, b) => b.score - a.score);
+        
+        // Populate the leaderboard
+        leaderboardData.forEach((character, index) => {
+            const row = document.createElement('tr');
+            if (character.isPlayer) {
+                row.className = 'player-row';
+            }
+            
+            const rankCell = document.createElement('td');
+            rankCell.textContent = index + 1;
+            
+            const nameCell = document.createElement('td');
+            nameCell.textContent = character.name;
+            
+            const scoreCell = document.createElement('td');
+            scoreCell.textContent = character.score.toString(2); // Display in binary
+            
+            row.appendChild(rankCell);
+            row.appendChild(nameCell);
+            row.appendChild(scoreCell);
+            
+            leaderboardBody.appendChild(row);
+        });
+    }
+
+    // Call updateLeaderboard initially
+    updateLeaderboard();
 
     // --- CanvasMonad ---
     const CanvasMonad = canvas => ({
@@ -248,16 +296,16 @@
                     ctx.stroke();
                 } else if (entity.type === "food") {
                     ctx.fillStyle = "lime";
-                    ctx.font = "30px Arial"; // Increased from 20px to 30px
+                    ctx.font = "30px Courier"; // Increased from 20px to 30px //"Courier New", monospace
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     ctx.fillText("1", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2);
                 } else if (entity.type === "badFood") {
                     ctx.fillStyle = "lime";
-                    ctx.font = "150px Arial"; // Increased from 90px to 150px
+                    ctx.font = "150px Courier"; // Increased from 90px to 150px
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
-                    ctx.fillText("0", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2 + 10.5); 
+                    ctx.fillText("0", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2); 
                 }
             });
         });
@@ -374,6 +422,9 @@
             if (totalScore > topScore) {
                 topScore = totalScore;
                 localStorage.setItem('TopScore', topScore);
+                
+                // Update the leaderboard with the new top score
+                updateLeaderboard();
             }
             
             alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Top score: ${topScore.toString(2)}. Restarting...`);

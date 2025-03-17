@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Neo Snake (Functional ECS with Input)</title>
+    <title>Neo Snake</title>
     <style>
         body, html {
             margin: 0;
@@ -10,12 +10,27 @@
             overflow: hidden;
             background: #000;
         }
+        #scoreDisplay {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            right: 0;
+            color: lightgray;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            text-align: center;
+            z-index: 100;
+            background: #111;
+            width: 600px;
+            margin: auto;
+
+        }
         canvas {
             padding: 0;
             margin: auto;
             display: block;
             position: absolute;
-            top: 0;
+            top: 50px;
             bottom: 0;
             left: 0;
             right: 0;
@@ -24,12 +39,19 @@
     </style>
 </head>
 <body>
+    <div id="scoreDisplay">
+        <span id="currentScore">Score: 0</span> | <span id="topScore">Top Score: 0</span>
+    </div>
     <canvas id="gameCanvas" width="600" height="600"></canvas>
     <script>
 
     // --- Constant for cell size ---
     const CELL_SIZE = 30;
     const GRID_COUNT = 20;
+
+    // --- Initialize top score from localStorage ---
+    let topScore = parseInt(localStorage.getItem('TopScore')) || 0;
+    document.getElementById('topScore').textContent = `Top Score: ${topScore.toString(2)}`;
 
     // --- CanvasMonad ---
     const CanvasMonad = canvas => ({
@@ -88,6 +110,9 @@
             foodEaten++;
             totalScore++;
             snakeAteFood = true;
+            
+            // Update score display
+            document.getElementById('currentScore').textContent = `Score: ${totalScore.toString(2)}`;
             
             // Remove the eaten food
             newEntities = newEntities.filter(e => e.type !== "food");
@@ -235,12 +260,6 @@
                     ctx.fillText("0", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2 + 10.5); 
                 }
             });
-
-            ctx.fillStyle = "white";
-            ctx.font = "24px Arial"; // Increased from 16px to 24px
-            ctx.textAlign = "left";
-            ctx.textBaseline = "top";
-            ctx.fillText(`Score: ${totalScore.toString(2)}`, 15, 15); // Increased from 10,10 to 15,15
         });
         
         return entities;
@@ -351,7 +370,13 @@
         
             setTimeout(gameLoop, 100); // Speed control
         } else {
-            alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Restarting...`);
+            // Check and update top score
+            if (totalScore > topScore) {
+                topScore = totalScore;
+                localStorage.setItem('TopScore', topScore);
+            }
+            
+            alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Top score: ${topScore.toString(2)}. Restarting...`);
             location.reload();
         }
     }
