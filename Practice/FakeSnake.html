@@ -26,6 +26,7 @@
 <body>
     <canvas id="gameCanvas" width="600" height="600"></canvas>
     <script>
+
     // --- Constant for cell size ---
     const CELL_SIZE = 30;
     const GRID_COUNT = 20;
@@ -55,10 +56,9 @@
         });
     };
 
-    // Collision System: Detects collisions and sets flags
+    // Collision System
     const collisionSystem = entities => {
         const snake = entities.find(e => e.type === "snake");
-        //if (!snake || !snake.alive) return entities;
         
         const head = snake.body[0];
         const food = entities.find(e => e.type === "food");
@@ -80,7 +80,7 @@
             newEntities.push(spawnFood());
             
             // Potentially spawn bad food
-            if (foodEaten >= Math.floor(Math.random() * 4) + 3) {
+            if (foodEaten >= Math.floor(Math.random() * 3) + 2) {
                 newEntities.push(spawnBadFood());
                 foodEaten = 0;
             }
@@ -103,7 +103,7 @@
             }
         }
         
-        // Update the snake to reflect if it ate food
+        // Update the snake to show if it ate food
         return newEntities.map(e => {
             if (e.type === "snake") {
                 return { ...e, ateFood: snakeAteFood };
@@ -112,7 +112,7 @@
         });
     };
 
-    // Movement System: Updates snake position and handles growth
+    // Movement System
     const movementSystem = entities => {
         return entities.map(entity => {
             if (entity.type === "snake" && entity.alive) {
@@ -141,7 +141,7 @@
         });
     };
 
-    // Self-Collision System: Checks if snake hits itself
+    // Self-Collision System
     const selfCollisionSystem = entities => {
         return entities.map(entity => {
             if (entity.type === "snake" && entity.alive) {
@@ -167,7 +167,7 @@
         });
     };
 
-    // Render System: Draws entities on the canvas
+    // Render System
     const renderSystem = (entities, canvasMonad) => {
         canvasMonad.chain(canvas => {
             const ctx = canvas.getContext("2d");
@@ -296,25 +296,23 @@
         const snake = entities.find(entity => entity.type === "snake");
   
         if (snake && snake.alive) {
-            // Define all systems to apply
+            // Define all systems in array
             const systems = [
-            // Apply input (with directionBuffer as extra argument)
+            // Apply input (with directionBuffer)
             entities => inputSystem(entities, directionBuffer),
             // Clear buffer after applying input
             entities => { directionBuffer = null; return entities; },
-            // Apply other systems
             movementSystem,
             collisionSystem,
             selfCollisionSystem,
             badFoodSystem,
-            // Render (with canvasMonad as extra argument)
             entities => renderSystem(entities, canvasMonad)
             ];
     
-            // Apply all systems using reduce
+            // Pass all systems to reduce
             entities = systems.reduce((currentEntities, system) => system(currentEntities), entities);
         
-            setTimeout(gameLoop, 100);
+            setTimeout(gameLoop, 100); // Speed control
         } else {
             alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Restarting...`);
             location.reload();
@@ -322,6 +320,7 @@
     }
 
     gameLoop();
+
     </script>
 </body>
 </html>
