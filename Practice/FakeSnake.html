@@ -7,7 +7,7 @@
 </head>
 <body>
     <header id="gameHeader">
-        wake up <span class="highlight">NeoSnake</span>... the matrix has you
+        wake up <span class="highlight">NeoSnake</span>... the matrix has you...
     </header>
     <div id="gameContainer">
         <div id="leaderboardContainer">
@@ -15,7 +15,7 @@
             <table id="leaderboard">
                 <thead>
                     <tr>
-                        <th>#</th> <!-- Changed from "Rank" to "#" -->
+                        <th>#</th>
                         <th>Name</th>
                         <th>Score</th>
                     </tr>
@@ -32,8 +32,11 @@
             </div>
         </div>
         <div id="buttonsContainer">
-            <button class="gameButton">Start</button>
+            <button class="gameButton" id="restartButton">Restart</button>
             <button class="gameButton">Reset Score</button>
+            <br><br/>
+            <button class="gameButton">Blue Pill</button>
+            <button class="gameButton">Red Pill</button>
             <br><br/>
             <button class="gameButton">Difficulty 1</button>
             <button class="gameButton">Difficulty 2</button>
@@ -100,6 +103,14 @@
 
     // Call updateLeaderboard initially
     updateLeaderboard();
+
+    // Corrected Restart function
+    function Restart() {
+        location.reload(); // Reloads the page to restart the game
+    }
+
+    // Add event listener to the Start button
+    document.getElementById('restartButton').addEventListener('click', Restart);
 
     // --- CanvasMonad ---
     const CanvasMonad = canvas => ({
@@ -427,7 +438,7 @@
                 updateLeaderboard();
             }
             
-            alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Top score: ${topScore.toString(2)}. Restarting...`);
+
             location.reload();
         }
     }
