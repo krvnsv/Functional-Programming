@@ -43,6 +43,22 @@
     // --- Entity Creation Helper ---
     const createEntity = components => ({ ...components });
 
+    // --- NEW: Position Checking System ---
+    // Check if any entity exists at the given coordinates
+    const isPositionOccupied = (x, y, entities) => {
+        return entities.some(entity => {
+            // Check snake body
+            if (entity.type === "snake") {
+                return entity.body.some(segment => segment.x === x && segment.y === y);
+            }
+            // Check food and badFood
+            else if (entity.type === "food" || entity.type === "badFood") {
+                return entity.position.x === x && entity.position.y === y;
+            }
+            return false;
+        });
+    };
+
     // --- Systems ---
     // Input System: Updates snake direction from buffered input
     const inputSystem = (entities, directionBuffer) => {
@@ -76,12 +92,12 @@
             // Remove the eaten food
             newEntities = newEntities.filter(e => e.type !== "food");
             
-            // Add a new food
-            newEntities.push(spawnFood());
+            // Add a new food (NEW: pass entities to avoid collisions)
+            newEntities.push(spawnFood(newEntities));
             
             // Potentially spawn bad food
             if (foodEaten >= Math.floor(Math.random() * 3) + 2) {
-                newEntities.push(spawnBadFood());
+                newEntities.push(spawnBadFood(newEntities));
                 foodEaten = 0;
             }
         }
@@ -213,10 +229,10 @@
                     ctx.fillText("1", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2);
                 } else if (entity.type === "badFood") {
                     ctx.fillStyle = "lime";
-                    ctx.font = "135px Arial"; // Increased from 90px to 135px
+                    ctx.font = "150px Arial"; // Increased from 90px to 150px
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
-                    ctx.fillText("0", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2 + 10.5); // 17 * 1.5 = 25.5 but 10.5 looks better
+                    ctx.fillText("0", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2 + 10.5); 
                 }
             });
 
@@ -231,18 +247,37 @@
     };
 
     // --- Helper Functions ---
-    const spawnFood = () => ({
-        id: "food",
-        type: "food",
-        position: { x: Math.floor(Math.random() * GRID_COUNT), y: Math.floor(Math.random() * GRID_COUNT) }
-    });
+    // NEW: Updated spawn functions to avoid collisions
+    const spawnFood = (entities) => {
+        let x, y;
+        // Keep generating random positions until we find an unoccupied one
+        do {
+            x = Math.floor(Math.random() * GRID_COUNT);
+            y = Math.floor(Math.random() * GRID_COUNT);
+        } while (entities && isPositionOccupied(x, y, entities));
+        
+        return {
+            id: "food",
+            type: "food",
+            position: { x, y }
+        };
+    };
 
-    const spawnBadFood = () => ({
-        id: "badFood",
-        type: "badFood",
-        position: { x: Math.floor(Math.random() * GRID_COUNT), y: Math.floor(Math.random() * GRID_COUNT)},
-        spawnTime: Date.now()
-    });
+    const spawnBadFood = (entities) => {
+        let x, y;
+        // Keep generating random positions until we find an unoccupied one
+        do {
+            x = Math.floor(Math.random() * GRID_COUNT);
+            y = Math.floor(Math.random() * GRID_COUNT);
+        } while (entities && isPositionOccupied(x, y, entities));
+        
+        return {
+            id: "badFood",
+            type: "badFood",
+            position: { x, y },
+            spawnTime: Date.now()
+        };
+    };
 
     const isOppositeDirection = (current, newDir) =>
         current.x === -newDir.x && current.y === -newDir.y;
@@ -256,9 +291,11 @@
             direction: { x: 1, y: 0 },
             alive: true,
             ateFood: false
-        }),
-        spawnFood()
+        })
     ];
+    
+    //Add food after snake is created to avoid collisions
+    entities.push(spawnFood(entities));
 
     let foodEaten = 0;
     let totalScore = 0;

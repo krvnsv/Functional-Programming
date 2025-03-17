@@ -24,9 +24,12 @@
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
     <script>
-    
+
+    // --- Constant for cell size ---
+    const CELL_SIZE = 30;
+    const GRID_COUNT = 20;
 
     // --- CanvasMonad ---
     const CanvasMonad = canvas => ({
@@ -37,9 +40,24 @@
         getContext: type => (canvas != null ? canvas.getContext(type) : null)
     });
 
-
     // --- Entity Creation Helper ---
     const createEntity = components => ({ ...components });
+
+    // --- NEW: Position Checking System ---
+    // Check if any entity exists at the given coordinates
+    const isPositionOccupied = (x, y, entities) => {
+        return entities.some(entity => {
+            // Check snake body
+            if (entity.type === "snake") {
+                return entity.body.some(segment => segment.x === x && segment.y === y);
+            }
+            // Check food and badFood
+            else if (entity.type === "food" || entity.type === "badFood") {
+                return entity.position.x === x && entity.position.y === y;
+            }
+            return false;
+        });
+    };
 
     // --- Systems ---
     // Input System: Updates snake direction from buffered input
@@ -54,10 +72,9 @@
         });
     };
 
-    // Collision System: Detects collisions and sets flags
+    // Collision System
     const collisionSystem = entities => {
         const snake = entities.find(e => e.type === "snake");
-        if (!snake || !snake.alive) return entities;
         
         const head = snake.body[0];
         const food = entities.find(e => e.type === "food");
@@ -75,13 +92,13 @@
             // Remove the eaten food
             newEntities = newEntities.filter(e => e.type !== "food");
             
-            // Add a new food
-            newEntities.push(spawnFood());
+            // Add a new food (NEW: pass entities to avoid collisions)
+            newEntities.push(spawnFood(newEntities));
             
             // Potentially spawn bad food
-            if (foodEaten >= Math.floor(Math.random() * 4) + 3) {
-            newEntities.push(spawnBadFood());
-            foodEaten = 0;
+            if (foodEaten >= Math.floor(Math.random() * 3) + 2) {
+                newEntities.push(spawnBadFood(newEntities));
+                foodEaten = 0;
             }
         }
         
@@ -90,152 +107,177 @@
             const badX = badFood.position.x;
             const badY = badFood.position.y;
             if (
-            head.x >= badX - 1 && head.x <= badX + 1 &&
-            head.y >= badY - 2 && head.y <= badY + 2
+                head.x >= badX - 1 && head.x <= badX + 1 &&
+                head.y >= badY - 2 && head.y <= badY + 2
             ) {
-            newEntities = newEntities.map(e => {
-                if (e.type === "snake") {
-                return { ...e, alive: false };
-                }
-                return e;
-            });
+                newEntities = newEntities.map(e => {
+                    if (e.type === "snake") {
+                        return { ...e, alive: false };
+                    }
+                    return e;
+                });
             }
         }
         
-        // Update the snake to reflect if it ate food
+        // Update the snake to show if it ate food
         return newEntities.map(e => {
             if (e.type === "snake") {
-            return { ...e, ateFood: snakeAteFood };
+                return { ...e, ateFood: snakeAteFood };
             }
             return e;
         });
     };
 
-    // Movement System: Updates snake position and handles growth
+    // Movement System
     const movementSystem = entities => {
-      return entities.map(entity => {
-        if (entity.type === "snake" && entity.alive) {
-          const newBody = [...entity.body];
-          const head = { 
-            x: newBody[0].x + entity.direction.x, 
-            y: newBody[0].y + entity.direction.y 
-          };
+        return entities.map(entity => {
+            if (entity.type === "snake" && entity.alive) {
+                const newBody = [...entity.body];
+                const head = { 
+                    x: newBody[0].x + entity.direction.x, 
+                    y: newBody[0].y + entity.direction.y 
+                };
 
-          // Wrap around the canvas
-          if (head.x < 0) head.x = 19;
-          if (head.x >= 20) head.x = 0;
-          if (head.y < 0) head.y = 19;
-          if (head.y >= 20) head.y = 0;
+                // Wrap around the canvas
+                if (head.x < 0) head.x = 19;
+                if (head.x >= 20) head.x = 0;
+                if (head.y < 0) head.y = 19;
+                if (head.y >= 20) head.y = 0;
 
-          newBody.unshift(head);
-          
-          // Only remove the tail if the snake didn't eat food
-          if (!entity.ateFood) {
-            newBody.pop();
-          }
-          
-          return { ...entity, body: newBody, ateFood: false };
-        }
-        return entity;
-      });
+                newBody.unshift(head);
+                
+                // Only remove the tail if the snake didn't eat food
+                if (!entity.ateFood) {
+                    newBody.pop();
+                }
+                
+                return { ...entity, body: newBody, ateFood: false };
+            }
+            return entity;
+        });
     };
 
-    // Self-Collision System: Checks if snake hits itself
+    // Self-Collision System
     const selfCollisionSystem = entities => {
-      return entities.map(entity => {
-        if (entity.type === "snake" && entity.alive) {
-          const head = entity.body[0];
-          for (let i = 1; i < entity.body.length; i++) {
-            if (head.x === entity.body[i].x && head.y === entity.body[i].y) {
-              return { ...entity, alive: false };
+        return entities.map(entity => {
+            if (entity.type === "snake" && entity.alive) {
+                const head = entity.body[0];
+                for (let i = 1; i < entity.body.length; i++) {
+                    if (head.x === entity.body[i].x && head.y === entity.body[i].y) {
+                        return { ...entity, alive: false };
+                    }
+                }
             }
-          }
-        }
-        return entity;
-      });
+            return entity;
+        });
     };
 
     // Bad Food System: Removes bad food after 10 seconds
     const badFoodSystem = entities => {
-      const now = Date.now();
-      return entities.filter(entity => {
-        if (entity.type === "badFood" && now - entity.spawnTime >= 10000) {
-          return false;
-        }
-        return true;
-      });
+        const now = Date.now();
+        return entities.filter(entity => {
+            if (entity.type === "badFood" && now - entity.spawnTime >= 10000) {
+                return false;
+            }
+            return true;
+        });
     };
 
-    // Render System: Draws entities on the canvas
+    // Render System
     const renderSystem = (entities, canvasMonad) => {
         canvasMonad.chain(canvas => {
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             entities.forEach(entity => {
-            if (entity.type === "snake" && entity.alive) {
-                ctx.fillStyle = "lime";
-                ctx.strokeStyle = "darkgreen";
-                ctx.lineWidth = 2;
-                entity.body.forEach(segment => {
-                ctx.fillRect(segment.x * 20, segment.y * 20, 20, 20);
-                ctx.strokeRect(segment.x * 20, segment.y * 20, 20, 20);
-                });
+                if (entity.type === "snake" && entity.alive) {
+                    ctx.fillStyle = "lime";
+                    ctx.strokeStyle = "darkgreen";
+                    ctx.lineWidth = 3; // Increased from 2 to 3 for larger size
+                    entity.body.forEach(segment => {
+                        ctx.fillRect(segment.x * CELL_SIZE, segment.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                        ctx.strokeRect(segment.x * CELL_SIZE, segment.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    });
 
-                // Draw Neo's glasses on the head
-                const head = entity.body[0];
-                const eyeWidth = 5, eyeHeight = 3, eyeOffsetX = 5, eyeOffsetY = 6;
-                ctx.fillStyle = "black";
-                ctx.beginPath();
-                ctx.ellipse(head.x * 20 + eyeOffsetX, head.y * 20 + eyeOffsetY, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(head.x * 20 + (20 - eyeOffsetX), head.y * 20 + eyeOffsetY, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(head.x * 20 + eyeOffsetX + eyeWidth, head.y * 20 + eyeOffsetY);
-                ctx.lineTo(head.x * 20 + (20 - eyeOffsetX) - eyeWidth, head.y * 20 + eyeOffsetY);
-                ctx.stroke();
-            } else if (entity.type === "food") {
-                ctx.fillStyle = "lime";
-                ctx.font = "20px Arial";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("1", entity.position.x * 20 + 10, entity.position.y * 20 + 10);
-            } else if (entity.type === "badFood") {
-                ctx.fillStyle = "lime";
-                ctx.font = "90px Arial";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("0", entity.position.x * 20 + 10, entity.position.y * 20 + 17);
-            }
+                    // Draw Neo's glasses - adjusted sizes for the 30px cell
+                    const head = entity.body[0];
+                    const eyeWidth = 7.5;  // 5 to 7.5
+                    const eyeHeight = 4.5; // 3 to 4.5
+                    const eyeOffsetX = 7.5; // 5 to 7.5
+                    const eyeOffsetY = 9;   // 6 to 9
+                    
+                    ctx.fillStyle = "black";
+                    ctx.beginPath();
+                    ctx.ellipse(head.x * CELL_SIZE + eyeOffsetX, head.y * CELL_SIZE + eyeOffsetY, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.ellipse(head.x * CELL_SIZE + (CELL_SIZE - eyeOffsetX), head.y * CELL_SIZE + eyeOffsetY, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = "black";
+                    ctx.lineWidth = 1.5; // Increased from 1 to 1.5
+                    ctx.beginPath();
+                    ctx.moveTo(head.x * CELL_SIZE + eyeOffsetX + eyeWidth, head.y * CELL_SIZE + eyeOffsetY);
+                    ctx.lineTo(head.x * CELL_SIZE + (CELL_SIZE - eyeOffsetX) - eyeWidth, head.y * CELL_SIZE + eyeOffsetY);
+                    ctx.stroke();
+                } else if (entity.type === "food") {
+                    ctx.fillStyle = "lime";
+                    ctx.font = "30px Arial"; // Increased from 20px to 30px
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("1", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2);
+                } else if (entity.type === "badFood") {
+                    ctx.fillStyle = "lime";
+                    ctx.font = "150px Arial"; // Increased from 90px to 150px
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("0", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2 + 10.5); 
+                }
+            });
+
+            ctx.fillStyle = "white";
+            ctx.font = "24px Arial"; // Increased from 16px to 24px
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.fillText(`Score: ${totalScore.toString(2)}`, 15, 15); // Increased from 10,10 to 15,15
         });
-
-        ctx.fillStyle = "white";
-        ctx.font = "16px Arial";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        ctx.fillText(`Score: ${totalScore.toString(2)}`, 10, 10);
-      });
-      
+        
         return entities;
     };
 
     // --- Helper Functions ---
-    const spawnFood = () => ({
-        id: "food",
-        type: "food",
-        position: { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) }
-    });
+    // NEW: Updated spawn functions to avoid collisions
+    const spawnFood = (entities) => {
+        let x, y;
+        // Keep generating random positions until we find an unoccupied one
+        do {
+            x = Math.floor(Math.random() * GRID_COUNT);
+            y = Math.floor(Math.random() * GRID_COUNT);
+        } while (entities && isPositionOccupied(x, y, entities));
+        
+        return {
+            id: "food",
+            type: "food",
+            position: { x, y }
+        };
+    };
 
-    const spawnBadFood = () => ({
-        id: "badFood",
-        type: "badFood",
-        position: { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) },
-        spawnTime: Date.now()
-    });
+    const spawnBadFood = (entities) => {
+        let x, y;
+        // Keep generating random positions until we find an unoccupied one
+        do {
+            x = Math.floor(Math.random() * GRID_COUNT);
+            y = Math.floor(Math.random() * GRID_COUNT);
+        } while (entities && isPositionOccupied(x, y, entities));
+        
+        return {
+            id: "badFood",
+            type: "badFood",
+            position: { x, y },
+            spawnTime: Date.now()
+        };
+    };
 
     const isOppositeDirection = (current, newDir) =>
         current.x === -newDir.x && current.y === -newDir.y;
@@ -249,9 +291,11 @@
             direction: { x: 1, y: 0 },
             alive: true,
             ateFood: false
-        }),
-        spawnFood()
+        })
     ];
+    
+    //Add food after snake is created to avoid collisions
+    entities.push(spawnFood(entities));
 
     let foodEaten = 0;
     let totalScore = 0;
@@ -284,30 +328,28 @@
         }
     });
 
-// --- Game Loop with reduce ---
+    // --- Game Loop ---
     function gameLoop() {
         const snake = entities.find(entity => entity.type === "snake");
   
         if (snake && snake.alive) {
-            // Define all systems to apply
+            // Define all systems in array
             const systems = [
-            // Apply input (with directionBuffer as extra argument)
+            // Apply input (with directionBuffer)
             entities => inputSystem(entities, directionBuffer),
             // Clear buffer after applying input
             entities => { directionBuffer = null; return entities; },
-            // Apply other systems
             movementSystem,
             collisionSystem,
             selfCollisionSystem,
             badFoodSystem,
-            // Render (with canvasMonad as extra argument)
             entities => renderSystem(entities, canvasMonad)
             ];
     
-            // Apply all systems using reduce
+            // Pass all systems to reduce
             entities = systems.reduce((currentEntities, system) => system(currentEntities), entities);
         
-            setTimeout(gameLoop, 100);
+            setTimeout(gameLoop, 100); // Speed control
         } else {
             alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Restarting...`);
             location.reload();
@@ -315,6 +357,7 @@
     }
 
     gameLoop();
-  </script>
+
+    </script>
 </body>
 </html>
