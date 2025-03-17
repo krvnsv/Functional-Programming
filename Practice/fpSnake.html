@@ -284,24 +284,29 @@
         }
     });
 
-    // --- Game Loop ---
+// --- Game Loop with reduce ---
     function gameLoop() {
-      const snake = entities.find(entity => entity.type === "snake");
-      
+        const snake = entities.find(entity => entity.type === "snake");
+  
         if (snake && snake.alive) {
-            // Apply input
-            entities = inputSystem(entities, directionBuffer);
-            directionBuffer = null; // Clear the buffer after applying
-            
+            // Define all systems to apply
+            const systems = [
+            // Apply input (with directionBuffer as extra argument)
+            entities => inputSystem(entities, directionBuffer),
+            // Clear buffer after applying input
+            entities => { directionBuffer = null; return entities; },
             // Apply other systems
-            entities = movementSystem(entities);
-            entities = collisionSystem(entities);
-            entities = selfCollisionSystem(entities);
-            entities = badFoodSystem(entities);
-            
-            // Render
-            renderSystem(entities, canvasMonad);
-            
+            movementSystem,
+            collisionSystem,
+            selfCollisionSystem,
+            badFoodSystem,
+            // Render (with canvasMonad as extra argument)
+            entities => renderSystem(entities, canvasMonad)
+            ];
+    
+            // Apply all systems using reduce
+            entities = systems.reduce((currentEntities, system) => system(currentEntities), entities);
+        
             setTimeout(gameLoop, 100);
         } else {
             alert(`Game Over! Neo bit his own tail or hit a 0. Your score is ${totalScore.toString(2)}. Restarting...`);
