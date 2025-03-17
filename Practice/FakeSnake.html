@@ -7,7 +7,7 @@
 </head>
 <body>
     <header id="gameHeader">
-        wake up <span class="highlight">NeoSnake</span>... the matrix has you...
+        Wake up <span class="highlight">NeoSnake</span>... The Matrix has you...
     </header>
     <div id="gameContainer">
         <div id="leaderboardContainer">
@@ -33,14 +33,14 @@
         </div>
         <div id="buttonsContainer">
             <button class="gameButton" id="restartButton">Restart</button>
-            <button class="gameButton">Reset Score</button>
+            <button class="gameButton" id="resetScoreButton">Reset Score</button>
             <br><br/>
-            <button class="gameButton">Blue Pill</button>
-            <button class="gameButton">Red Pill</button>
+            <button class="gameButton" id="bluePillButton">Blue Pill</button>
+            <button class="gameButton" id="redPillButton">Red Pill</button>
             <br><br/>
-            <button class="gameButton">Difficulty 1</button>
-            <button class="gameButton">Difficulty 2</button>
-            <button class="gameButton">Difficulty 3</button>
+            <button class="gameButton" id="diif1Button">Difficulty 1</button>
+            <button class="gameButton" id="diff2Button">Difficulty 2</button>
+            <button class="gameButton" id="diff3Button">Difficulty 3</button>
         </div>
     </div>
     <script>
@@ -104,13 +104,23 @@
     // Call updateLeaderboard initially
     updateLeaderboard();
 
-    // Corrected Restart function
+    // Buttnons
     function Restart() {
         location.reload(); // Reloads the page to restart the game
     }
 
-    // Add event listener to the Start button
+    function resetScore(){
+        localStorage.clear()
+    }
+
+    function bluePill(){
+
+    }
+
+
+    // Event Listeners
     document.getElementById('restartButton').addEventListener('click', Restart);
+    document.getElementById('resetScoreButton').addEventListener('click', resetScore);
 
     // --- CanvasMonad ---
     const CanvasMonad = canvas => ({
@@ -427,19 +437,19 @@
             // Pass all systems to reduce
             entities = systems.reduce((currentEntities, system) => system(currentEntities), entities);
         
-            setTimeout(gameLoop, 100); // Speed control
-        } else {
+            
             // Check and update top score
             if (totalScore > topScore) {
                 topScore = totalScore;
                 localStorage.setItem('TopScore', topScore);
                 
-                // Update the leaderboard with the new top score
-                updateLeaderboard();
             }
+            // Update the leaderboard with the new top score
+            updateLeaderboard();
+            setTimeout(gameLoop, 100); // Speed control
+        } else {
             
 
-            location.reload();
         }
     }
 
