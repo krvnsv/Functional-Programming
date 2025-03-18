@@ -33,7 +33,7 @@
         </div>
         <div id="buttonsContainer">
             <button class="gameButton" id="restartButton">Restart</button>
-            <button class="gameButton" id="resetScoreButton">Reset Top Score</button>
+            <button class="gameButton" id="resetScoreButton">Reset Game</button>
             <br><br/>
             <button class="gameButton" id="bluePillButton">Blue Pill</button>
             <button class="gameButton" id="redPillButton">Red Pill</button>
@@ -62,11 +62,11 @@
         // --- Initialize top score from localStorage ---
         let topScore = parseInt(localStorage.getItem('TopScore')) || 0;
         // Define button variables
-        let isBinary = localStorage.getItem('isBinary') || true
+        let isBinary = localStorage.getItem('isBinary') === 'false' ? false : true;
         let multiplier = parseInt(localStorage.getItem('multiplier')) || 1;
         let delay = parseInt(localStorage.getItem('delay')) || 100;
 
-        document.getElementById('topScore').textContent = `Top Score: ${topScore.toString(2)}`;
+        document.getElementById('topScore').textContent = `Top Score: ${isBinary ? topScore.toString(2) : topScore}`;
         
         // --- Initialize leaderboard ---
         function updateLeaderboard() {
@@ -97,7 +97,7 @@
             nameCell.textContent = character.name;
             
             const scoreCell = document.createElement('td');
-            scoreCell.textContent = character.score.toString(2); // Display in binary
+            scoreCell.textContent = isBinary ? character.score.toString(2) : character.score;
             
             row.appendChild(rankCell);
             row.appendChild(nameCell);
@@ -122,13 +122,21 @@
     }
 
     function bluePill(){
-        isBinary = false
-        localStorage.setItem('isBinary', false);
+        isBinary = false;
+        localStorage.setItem('isBinary', 'false');
+        // Update displays immediately
+        document.getElementById('topScore').textContent = `Top Score: ${isBinary ? topScore.toString(2) : topScore}`;
+        document.getElementById('currentScore').textContent = `Score: ${isBinary ? totalScore.toString(2) : totalScore}`;
+        updateLeaderboard();
     }
 
-    function redPill(){
-        isBinary = true
-        localStorage.setItem('isBinary', true);
+function redPill(){
+        isBinary = true;
+        localStorage.setItem('isBinary', 'true');
+        // Update displays immediately
+        document.getElementById('topScore').textContent = `Top Score: ${isBinary ? topScore.toString(2) : topScore}`;
+        document.getElementById('currentScore').textContent = `Score: ${isBinary ? totalScore.toString(2) : totalScore}`;
+        updateLeaderboard();
     }
 
     function diff1(){
@@ -225,7 +233,7 @@
             snakeAteFood = true;
             
             // Update score display
-            document.getElementById('currentScore').textContent = `Score: ${totalScore.toString(2)}`;
+            document.getElementById('currentScore').textContent = `Score: ${isBinary ? totalScore.toString(2) : totalScore}`;
             
             // Remove the eaten food
             newEntities = newEntities.filter(e => e.type !== "food");
@@ -489,7 +497,8 @@
             if (totalScore > topScore) {
                 topScore = totalScore;
                 localStorage.setItem('TopScore', topScore);
-                
+                // Update the top score display
+                document.getElementById('topScore').textContent = `Top Score: ${isBinary ? topScore.toString(2) : topScore}`;
             }
             // Update the leaderboard with the new top score
             updateLeaderboard();
