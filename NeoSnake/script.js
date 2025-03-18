@@ -4,18 +4,17 @@ const GRID_COUNT = 20;
 
 // --- Matrix character scores in binary ---
 const matrixCharacters = [
-    { name: "The Architect", score: 159 }, // 10011111 in binary
-    { name: "Morpheus", score: 103 },      // 1100111 in binary
-    { name: "Trinity", score: 63 },        // 111111 in binary
-    { name: "Agent Smith", score: 31 },    // 11111 in binary
-    { name: "Cypher", score: 15 },         // 1111 in binary
-    { name: "Oracle", score: 7 },        // 111 in binary
-    { name: "Spoon Boy", score: 3 },        // 11 in binary
+    { name: "The Architect", score: 159 }, // 10011111
+    { name: "Morpheus", score: 103 },      // 1100111 
+    { name: "Trinity", score: 63 },        // 111111 
+    { name: "Agent Smith", score: 31 },    // 11111 
+    { name: "Cypher", score: 15 },         // 1111 
+    { name: "Oracle", score: 7 },          // 111 
+    { name: "Spoon Boy", score: 3 },       // 11 
 ];
 
-// --- Initialize top score from localStorage ---
+// --- Initialize variables from localStorage ---
 let topScore = parseInt(localStorage.getItem('TopScore')) || 0;
-// Define button variables
 let isBinary = localStorage.getItem('isBinary') === 'false' ? false : true;
 let multiplier = parseInt(localStorage.getItem('multiplier')) || 1;
 let delay = parseInt(localStorage.getItem('delay')) || 100;
@@ -78,7 +77,7 @@ location.reload();
 function bluePill(){
 isBinary = false;
 localStorage.setItem('isBinary', 'false');
-// Update displays immediately
+// Update displays
 document.getElementById('topScore').textContent = `Top Score: ${isBinary ? topScore.toString(2) : topScore}`;
 document.getElementById('currentScore').textContent = `Score: ${isBinary ? totalScore.toString(2) : totalScore}`;
 updateLeaderboard();
@@ -87,7 +86,7 @@ updateLeaderboard();
 function redPill(){
 isBinary = true;
 localStorage.setItem('isBinary', 'true');
-// Update displays immediately
+// Update displays
 document.getElementById('topScore').textContent = `Top Score: ${isBinary ? topScore.toString(2) : topScore}`;
 document.getElementById('currentScore').textContent = `Score: ${isBinary ? totalScore.toString(2) : totalScore}`;
 updateLeaderboard();
@@ -192,7 +191,7 @@ if (food && head.x === food.position.x && head.y === food.position.y) {
     // Remove the eaten food
     newEntities = newEntities.filter(e => e.type !== "food");
     
-    // Add a new food (NEW: pass entities to avoid collisions)
+    // Add a new food (pass entities to avoid collisions)
     newEntities.push(spawnFood(newEntities));
     
     // Potentially spawn bad food
@@ -299,7 +298,7 @@ canvasMonad.chain(canvas => {
                 ctx.strokeRect(segment.x * CELL_SIZE, segment.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
             });
 
-            // Draw Neo's glasses - adjusted sizes for the 30px cell
+            // Draw Neo's glasses
             const head = entity.body[0];
             const eyeWidth = 7.5;  // 5 to 7.5
             const eyeHeight = 4.5; // 3 to 4.5
@@ -323,7 +322,7 @@ canvasMonad.chain(canvas => {
             ctx.stroke();
         } else if (entity.type === "food") {
             ctx.fillStyle = "lime";
-            ctx.font = "30px Courier"; // Increased from 20px to 30px //"Courier New", monospace
+            ctx.font = "30px Courier"; // Increased from 20px to 30px
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText("1", entity.position.x * CELL_SIZE + CELL_SIZE/2, entity.position.y * CELL_SIZE + CELL_SIZE/2);
@@ -341,7 +340,6 @@ return entities;
 };
 
 // --- Helper Functions ---
-// NEW: Updated spawn functions to avoid collisions
 const spawnFood = (entities) => {
 let x, y;
 // Keep generating random positions until we find an unoccupied one
@@ -359,7 +357,7 @@ return {
 
 const spawnBadFood = (entities) => {
 let x, y;
-// Keep generating random positions until we find an unoccupied one
+// Keep generating random positions until we find a free one
 do {
     x = Math.floor(Math.random() * GRID_COUNT);
     y = Math.floor(Math.random() * GRID_COUNT);
