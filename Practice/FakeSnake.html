@@ -55,7 +55,8 @@
             { name: "Trinity", score: 63 },        // 111111 in binary
             { name: "Agent Smith", score: 31 },    // 11111 in binary
             { name: "Cypher", score: 15 },         // 1111 in binary
-            { name: "Spoon Boy", score: 7 }        // 111 in binary
+            { name: "Oracle", score: 7 },        // 111 in binary
+            { name: "Spoon Boy", score: 3 },        // 11 in binary
         ];
         
         // --- Initialize top score from localStorage ---
@@ -116,7 +117,8 @@
     }
 
     function resetScore(){
-        localStorage.clear()
+        localStorage.clear();
+        location.reload();
     }
 
     function bluePill(){
@@ -438,7 +440,10 @@
     // --- Input Handling ---
     document.addEventListener("keydown", e => {
         const snake = entities.find(entity => entity.type === "snake");
-        if (!snake || !snake.alive) return;
+        if (e.key === "Enter" && (!snake || !snake.alive)){
+            Restart();
+            return
+        }
         
         const currentDirection = snake.direction;
         let newDirection = null;
