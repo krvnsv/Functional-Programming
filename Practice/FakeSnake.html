@@ -33,39 +33,44 @@
         </div>
         <div id="buttonsContainer">
             <button class="gameButton" id="restartButton">Restart</button>
-            <button class="gameButton" id="resetScoreButton">Reset Score</button>
+            <button class="gameButton" id="resetScoreButton">Reset Top Score</button>
             <br><br/>
             <button class="gameButton" id="bluePillButton">Blue Pill</button>
             <button class="gameButton" id="redPillButton">Red Pill</button>
             <br><br/>
-            <button class="gameButton" id="diif1Button">Difficulty 1</button>
+            <button class="gameButton" id="diff1Button">Difficulty 1</button>
             <button class="gameButton" id="diff2Button">Difficulty 2</button>
             <button class="gameButton" id="diff3Button">Difficulty 3</button>
         </div>
     </div>
     <script>
-    // --- Constant for cell size ---
-    const CELL_SIZE = 30;
-    const GRID_COUNT = 20;
+        // --- Constant for cell size ---
+        const CELL_SIZE = 30;
+        const GRID_COUNT = 20;
+        
+        // --- Matrix character scores in binary ---
+        const matrixCharacters = [
+            { name: "The Architect", score: 159 }, // 10011111 in binary
+            { name: "Morpheus", score: 103 },      // 1100111 in binary
+            { name: "Trinity", score: 63 },        // 111111 in binary
+            { name: "Agent Smith", score: 31 },    // 11111 in binary
+            { name: "Cypher", score: 15 },         // 1111 in binary
+            { name: "Spoon Boy", score: 7 }        // 111 in binary
+        ];
+        
+        // --- Initialize top score from localStorage ---
+        let topScore = parseInt(localStorage.getItem('TopScore')) || 0;
+        // Define button variables
+        let isBinary = localStorage.getItem('isBinary') || true
+        let multiplier = parseInt(localStorage.getItem('multiplier')) || 1;
+        let delay = parseInt(localStorage.getItem('delay')) || 100;
 
-    // --- Matrix character scores in binary ---
-    const matrixCharacters = [
-        { name: "The Architect", score: 255 }, // 11111111 in binary
-        { name: "Morpheus", score: 127 },      // 1111111 in binary
-        { name: "Trinity", score: 63 },        // 111111 in binary
-        { name: "Agent Smith", score: 31 },    // 11111 in binary
-        { name: "Cypher", score: 15 },         // 1111 in binary
-        { name: "Spoon Boy", score: 7 }        // 111 in binary
-    ];
-
-    // --- Initialize top score from localStorage ---
-    let topScore = parseInt(localStorage.getItem('TopScore')) || 0;
-    document.getElementById('topScore').textContent = `Top Score: ${topScore.toString(2)}`;
-
-    // --- Initialize leaderboard ---
-    function updateLeaderboard() {
-        const leaderboardBody = document.getElementById('leaderboardBody');
-        leaderboardBody.innerHTML = '';
+        document.getElementById('topScore').textContent = `Top Score: ${topScore.toString(2)}`;
+        
+        // --- Initialize leaderboard ---
+        function updateLeaderboard() {
+            const leaderboardBody = document.getElementById('leaderboardBody');
+            leaderboardBody.innerHTML = '';
         
         // Create a copy of the matrix characters
         let leaderboardData = [...matrixCharacters];
@@ -103,6 +108,7 @@
 
     // Call updateLeaderboard initially
     updateLeaderboard();
+    
 
     // Buttnons
     function Restart() {
@@ -114,13 +120,49 @@
     }
 
     function bluePill(){
+        isBinary = false
+        localStorage.setItem('isBinary', false);
+    }
 
+    function redPill(){
+        isBinary = true
+        localStorage.setItem('isBinary', true);
+    }
+
+    function diff1(){
+        multiplier = 1
+        delay = 100
+        localStorage.setItem('multiplier', 1);
+        localStorage.setItem('delay', 100);
+
+    }
+
+    function diff2(){
+        multiplier = 2
+        delay = 75
+        localStorage.setItem('multiplier', 2);
+        localStorage.setItem('delay', 75);
+    }
+
+    function diff3(){
+        multiplier = 3
+        delay = 50
+        localStorage.setItem('multiplier', 3);
+        localStorage.setItem('delay', 50);
     }
 
 
     // Event Listeners
     document.getElementById('restartButton').addEventListener('click', Restart);
     document.getElementById('resetScoreButton').addEventListener('click', resetScore);
+
+    document.getElementById('bluePillButton').addEventListener('click', bluePill);
+    document.getElementById('redPillButton').addEventListener('click', redPill);
+
+    document.getElementById('diff1Button').addEventListener('click', diff1);
+    document.getElementById('diff2Button').addEventListener('click', diff2);
+    document.getElementById('diff3Button').addEventListener('click', diff3);
+
 
     // --- CanvasMonad ---
     const CanvasMonad = canvas => ({
@@ -177,7 +219,7 @@
         // Food collision
         if (food && head.x === food.position.x && head.y === food.position.y) {
             foodEaten++;
-            totalScore++;
+            totalScore = totalScore + 1 * multiplier;
             snakeAteFood = true;
             
             // Update score display
@@ -437,7 +479,7 @@
             // Pass all systems to reduce
             entities = systems.reduce((currentEntities, system) => system(currentEntities), entities);
         
-            
+
             // Check and update top score
             if (totalScore > topScore) {
                 topScore = totalScore;
@@ -446,7 +488,7 @@
             }
             // Update the leaderboard with the new top score
             updateLeaderboard();
-            setTimeout(gameLoop, 100); // Speed control
+            setTimeout(gameLoop, delay); // Speed control
         } else {
             
 
